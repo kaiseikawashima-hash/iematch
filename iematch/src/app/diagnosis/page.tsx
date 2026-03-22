@@ -1,0 +1,330 @@
+"use client";
+
+import { useState, useCallback, useMemo } from "react";
+import { useRouter } from "next/navigation";
+import { Answer, FamilyData } from "@/types";
+import { questions } from "@/data/questions";
+import { Header } from "@/components/layout/Header";
+import { ProgressBar } from "@/components/diagnosis/ProgressBar";
+import { SingleSelectCard } from "@/components/diagnosis/SingleSelectCard";
+import { MultiSelectCard } from "@/components/diagnosis/MultiSelectCard";
+import { ImageSelectCard } from "@/components/diagnosis/ImageSelectCard";
+import { RankedSelectCard } from "@/components/diagnosis/RankedSelectCard";
+import { CascadeSelect } from "@/components/diagnosis/CascadeSelect";
+import { FamilyInput } from "@/components/diagnosis/FamilyInput";
+
+// 条件分岐を考慮した表示質問リストを算出
+function getVisibleQuestions(answers: Answer[]) {
+  return questions.filter((q) => {
+    if (!q.condition) return true;
+    const dep = answers.find((a) => a.questionId === q.condition!.dependsOn);
+    if (!dep) return false;
+    const depValue = typeof dep.value === "string" ? dep.value : "";
+    return q.condition.showWhen.includes(depValue);
+  });
+}
+
+export default function DiagnosisPage() {
+  const router = useRouter();
+  const [answers, setAnswers] = useState<Answer[]>([]);
+  const [currentIndex, setCurrentIndex] = useState(0);
+
+  // 家族構成用ステート
+  const [family, setFamily] = useState<FamilyData>({
+    adults: 2,
+    children: 1,
+    futurePlan: "same",
+  });
+
+  // エリア用ステート
+  const [prefecture, setPrefecture] = useState("");
+  const [city, setCity] = useState("");
+
+  const visibleQuestions = useMemo(() => getVisibleQuestions(answers), [answers]);
+  const currentQuestion = visibleQuestions[currentIndex];
+  const totalCategories = 7;
+
+  // 現在の回答を取得
+  const currentAnswer = useMemo(
+    () => answers.find((a) => a.questionId === currentQuestion?.id),
+    [answers, currentQuestion]
+  );
+
+  // 回答を更新（イミュータブル）
+  const updateAnswer = useCallback(
+    (questionId: string, value: string | string[], rank?: string[]) => {
+      setAnswers((prev) => {
+        const filtered = prev.filter((a) => a.questionId !== questionId);
+        return [...filtered, { questionId, value, rank }];
+      });
+    },
+    []
+  );
+
+  // 単一選択ハンドラ
+  const handleSingleSelect = useCallback(
+    (value: string) => {
+      if (!currentQuestion) return;
+      updateAnswer(currentQuestion.id, value);
+    },
+    [currentQuestion, updateAnswer]
+  );
+
+  // 複数選択トグルハンドラ
+  const handleMultiToggle = useCallback(
+    (value: string) => {
+      if (!currentQuestion) return;
+      const current = Array.isArray(currentAnswer?.value)
+        ? currentAnswer.value
+        : [];
+
+      // "none" 系の排他処理
+      if (value === "none") {
+        updateAnswer(currentQuestion.id, ["none"]);
+        return;
+      }
+
+      const withoutNone = current.filter((v) => v !== "none");
+      const updated = withoutNone.includes(value)
+        ? withoutNone.filter((v) => v !== value)
+        : [...withoutNone, value];
+      updateAnswer(currentQuestion.id, updated);
+    },
+    [currentQuestion, currentAnswer, updateAnswer]
+  );
+
+  // ランキング選択ハンドラ
+  const handleRankedSelect = useCallback(
+    (value: string) => {
+      if (!currentQuestion) return;
+      const currentRank = currentAnswer?.rank ?? [];
+
+      // "none" の排他処理
+      if (value === "none") {
+        updateAnswer(currentQuestion.id, ["none"], ["none"]);
+        return;
+      }
+
+      const withoutNone = currentRank.filter((v) => v !== "none");
+      const updated = [...withoutNone, value];
+      updateAnswer(currentQuestion.id, updated, updated);
+    },
+    [currentQuestion, currentAnswer, updateAnswer]
+  );
+
+  const handleRankedRemove = useCallback(
+    (value: string) => {
+      if (!currentQuestion) return;
+      const currentRank = currentAnswer?.rank ?? [];
+      const updated = currentRank.filter((v) => v !== value);
+      updateAnswer(currentQuestion.id, updated, updated);
+    },
+    [currentQuestion, currentAnswer, updateAnswer]
+  );
+
+  // 「次へ」ボタンの有効判定
+  const canProceed = useMemo(() => {
+    if (!currentQuestion) return false;
+
+    switch (currentQuestion.type) {
+      case "single":
+        return !!currentAnswer?.value;
+      case "multi": {
+        const selected = Array.isArray(currentAnswer?.value) ? currentAnswer.value : [];
+        return selected.length > 0;
+      }
+      case "image": {
+        const selected = Array.isArray(currentAnswer?.value) ? currentAnswer.value : [];
+        const min = currentQuestion.minSelect ?? 1;
+        return selected.length >= min;
+      }
+      case "ranked": {
+        const ranked = currentAnswer?.rank ?? [];
+        if (ranked.includes("none")) return true;
+        return ranked.length >= (currentQuestion.maxSelect ?? 1);
+      }
+      case "cascade":
+        return !!city;
+      case "family":
+        return !!family.futurePlan;
+      default:
+        return false;
+    }
+  }, [currentQuestion, currentAnswer, city, family]);
+
+  // 次へ
+  const handleNext = useCallback(() => {
+    if (!currentQuestion || !canProceed) return;
+
+    // cascade の場合、回答を保存
+    if (currentQuestion.type === "cascade" && city) {
+      updateAnswer(currentQuestion.id, city);
+    }
+
+    // family の場合、回答を保存
+    if (currentQuestion.type === "family") {
+      updateAnswer(currentQuestion.id, [
+        `adults:${family.adults}`,
+        `children:${family.children}`,
+        `plan:${family.futurePlan}`,
+      ]);
+    }
+
+    // 最後の質問なら結果画面へ
+    const nextVisibleQuestions = getVisibleQuestions(
+      currentQuestion.type === "cascade"
+        ? [...answers.filter((a) => a.questionId !== currentQuestion.id), { questionId: currentQuestion.id, value: city }]
+        : answers
+    );
+
+    if (currentIndex >= nextVisibleQuestions.length - 1) {
+      // 回答データをsessionStorageに保存して結果画面へ
+      const finalAnswers = currentQuestion.type === "cascade"
+        ? [...answers.filter((a) => a.questionId !== currentQuestion.id), { questionId: currentQuestion.id, value: city }]
+        : currentQuestion.type === "family"
+          ? [...answers.filter((a) => a.questionId !== currentQuestion.id), {
+              questionId: currentQuestion.id,
+              value: [`adults:${family.adults}`, `children:${family.children}`, `plan:${family.futurePlan}`],
+            }]
+          : answers;
+
+      sessionStorage.setItem(
+        "iematch_answers",
+        JSON.stringify({
+          answers: finalAnswers,
+          completedAt: new Date().toISOString(),
+        })
+      );
+      router.push("/result");
+      return;
+    }
+
+    setCurrentIndex((prev) => prev + 1);
+  }, [currentQuestion, canProceed, currentIndex, answers, city, family, updateAnswer, router]);
+
+  // 戻る
+  const handleBack = useCallback(() => {
+    if (currentIndex > 0) {
+      setCurrentIndex((prev) => prev - 1);
+    }
+  }, [currentIndex]);
+
+  if (!currentQuestion) return null;
+
+  const selectedArray = Array.isArray(currentAnswer?.value)
+    ? currentAnswer!.value
+    : [];
+  const selectedSingle =
+    typeof currentAnswer?.value === "string" ? currentAnswer.value : undefined;
+  const rankedValues = currentAnswer?.rank ?? [];
+
+  return (
+    <div className="flex min-h-screen flex-col" style={{ background: "#F5F4F0" }}>
+      <Header />
+
+      <main className="mx-auto w-full max-w-lg flex-1 px-4 py-6">
+        <ProgressBar
+          categoryLabel={currentQuestion.categoryLabel}
+          categoryNumber={currentQuestion.category}
+          totalCategories={totalCategories}
+          questionNumber={currentIndex + 1}
+          totalQuestions={visibleQuestions.length}
+        />
+
+        <div className="mb-6">
+          <h2 className="text-lg font-bold leading-relaxed">
+            {currentQuestion.text}
+          </h2>
+          {currentQuestion.subText && (
+            <p className="mt-1 text-xs text-muted-foreground">
+              {currentQuestion.subText}
+            </p>
+          )}
+        </div>
+
+        {/* 質問タイプごとのコンポーネント */}
+        {currentQuestion.type === "single" && (
+          <SingleSelectCard
+            options={currentQuestion.options}
+            selected={selectedSingle}
+            onSelect={handleSingleSelect}
+          />
+        )}
+
+        {currentQuestion.type === "multi" && (
+          <MultiSelectCard
+            options={currentQuestion.options}
+            selected={selectedArray}
+            maxSelect={currentQuestion.maxSelect}
+            onToggle={handleMultiToggle}
+          />
+        )}
+
+        {currentQuestion.type === "image" && (
+          <ImageSelectCard
+            options={currentQuestion.options}
+            selected={selectedArray}
+            minSelect={currentQuestion.minSelect}
+            maxSelect={currentQuestion.maxSelect}
+            onToggle={handleMultiToggle}
+          />
+        )}
+
+        {currentQuestion.type === "ranked" && (
+          <RankedSelectCard
+            options={currentQuestion.options}
+            ranked={rankedValues}
+            maxSelect={currentQuestion.maxSelect ?? 3}
+            onSelect={handleRankedSelect}
+            onRemove={handleRankedRemove}
+          />
+        )}
+
+        {currentQuestion.type === "cascade" && (
+          <CascadeSelect
+            selectedPrefecture={prefecture}
+            selectedCity={city}
+            onPrefectureChange={setPrefecture}
+            onCityChange={setCity}
+          />
+        )}
+
+        {currentQuestion.type === "family" && (
+          <FamilyInput
+            family={family}
+            futurePlanOptions={currentQuestion.options}
+            onChange={setFamily}
+          />
+        )}
+
+        {/* ナビゲーションボタン */}
+        <div className="mt-8 flex gap-3">
+          {currentIndex > 0 && (
+            <button
+              type="button"
+              onClick={handleBack}
+              className="flex h-12 flex-1 items-center justify-center rounded-full border border-black/10 text-sm font-medium text-gray-600 transition-colors hover:bg-gray-50"
+            >
+              戻る
+            </button>
+          )}
+          <button
+            type="button"
+            onClick={handleNext}
+            disabled={!canProceed}
+            className={`flex h-12 flex-[2] items-center justify-center rounded-full text-sm font-medium text-white transition-all ${
+              canProceed
+                ? "bg-brand hover:bg-brand-dark shadow-sm"
+                : "cursor-not-allowed bg-gray-300"
+            }`}
+          >
+            {currentIndex >= visibleQuestions.length - 1 ? "診断結果を見る" : "次へ進む"}
+            {currentQuestion.type === "multi" && selectedArray.length > 0 && (
+              <span className="ml-1">（{selectedArray.length}件選択中）</span>
+            )}
+          </button>
+        </div>
+      </main>
+    </div>
+  );
+}
