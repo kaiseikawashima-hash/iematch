@@ -1,0 +1,16 @@
+{
+  "mcpServers": {
+    "ie-match-mcp": {
+      "type": "sse",
+      "url": "https://your-deployment-url.vercel.app/mcp"
+    },
+    "playwright": {
+      "command": "npx",
+      "args": ["-y", "@playwright/mcp"]
+    },
+    "supabase": {
+      "command": "npx",
+      "args": ["-y", "supabase-mcp-server"]
+    }
+  }
+}
