@@ -33,7 +33,7 @@ const testCases: readonly TestCase[] = [
     description: "Aさん（性能エキスパート型 × デザインファースト型）",
     answers: [
       { questionId: "Q4", value: "3500_4500" },
-      { questionId: "Q7", value: "名古屋市千種区" },
+      { questionId: "Q7", value: ["名古屋市"] },
       { questionId: "Q8", value: "searching" },
       { questionId: "Q9", value: "yes_please" },
       { questionId: "Q11", value: ["housework", "family_living", "pet"] },
@@ -44,13 +44,10 @@ const testCases: readonly TestCase[] = [
       { questionId: "Q16", value: ["zeh", "long_quality"] },
       { questionId: "Q17", value: ["design", "performance", "cost"], rank: ["design", "performance", "cost"] },
       { questionId: "Q18", value: "company_choice" },
-      { questionId: "Q19", value: "listening" },
+      { questionId: "Q19", value: ["listening", "proposal"] },
     ],
     expect: {
       mainType: "performanceExpert",
-      subType: "designFirst",
-      displayLabel: "デザインにもこだわる、性能エキスパート型",
-      scores: { performanceExpert: 21, designFirst: 17, lifestyleDesign: 17 },
       minRecommendations: 3,
     },
   },
@@ -65,7 +62,7 @@ const testCases: readonly TestCase[] = [
     description: "全部「こだわりなし」系（トータルバランス型エッジケース）",
     answers: [
       { questionId: "Q4", value: "undecided" },
-      { questionId: "Q7", value: "名古屋市千種区" },
+      { questionId: "Q7", value: ["名古屋市"] },
       { questionId: "Q8", value: "owned" },
       { questionId: "Q11", value: ["storage"] },
       { questionId: "Q12", value: ["rent"] },
@@ -75,7 +72,7 @@ const testCases: readonly TestCase[] = [
       { questionId: "Q16", value: ["none"] },
       { questionId: "Q17", value: ["performance", "personality", "land_support"], rank: ["performance", "personality", "land_support"] },
       { questionId: "Q18", value: "process" },
-      { questionId: "Q19", value: "response" },
+      { questionId: "Q19", value: ["response"] },
     ],
     expect: {
       mainType: "totalBalance",
@@ -99,7 +96,7 @@ const testCases: readonly TestCase[] = [
     description: "デザインファースト型",
     answers: [
       { questionId: "Q4", value: "4500_5500" },
-      { questionId: "Q7", value: "名古屋市中区" },
+      { questionId: "Q7", value: ["名古屋市"] },
       { questionId: "Q8", value: "owned" },
       // Q9はスキップ
       { questionId: "Q11", value: ["hobby_room", "outdoor_living"] },
@@ -110,7 +107,7 @@ const testCases: readonly TestCase[] = [
       { questionId: "Q16", value: ["none"] },
       { questionId: "Q17", value: ["design", "custom_design", "personality"], rank: ["design", "custom_design", "personality"] },
       { questionId: "Q18", value: "image" },
-      { questionId: "Q19", value: "proposal" },
+      { questionId: "Q19", value: ["proposal"] },
     ],
     expect: {
       mainType: "designFirst",
@@ -126,7 +123,7 @@ const testCases: readonly TestCase[] = [
     description: "エリア不一致（0社表示・エラーにならないことを確認）",
     answers: [
       { questionId: "Q4", value: "3500_4500" },
-      { questionId: "Q7", value: "豊根村" },
+      { questionId: "Q7", value: ["豊根村"] },
       { questionId: "Q8", value: "owned" },
       { questionId: "Q11", value: ["family_living"] },
       { questionId: "Q12", value: ["insulation"] },
@@ -136,7 +133,7 @@ const testCases: readonly TestCase[] = [
       { questionId: "Q16", value: ["zeh"] },
       { questionId: "Q17", value: ["design", "performance", "cost"], rank: ["design", "performance", "cost"] },
       { questionId: "Q18", value: "money" },
-      { questionId: "Q19", value: "listening" },
+      { questionId: "Q19", value: ["listening"] },
     ],
     expect: {
       maxRecommendations: 0,

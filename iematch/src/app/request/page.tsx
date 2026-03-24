@@ -3,11 +3,12 @@
 import { useEffect, useState, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { RequestFormData } from "@/types";
-import { builders } from "@/data/builders";
+import { useBuilders } from "@/hooks/useBuilders";
 import { Header } from "@/components/layout/Header";
 
 export default function RequestPage() {
   const router = useRouter();
+  const { builders } = useBuilders();
   const [builderIds, setBuilderIds] = useState<string[]>([]);
   const [form, setForm] = useState<RequestFormData>({
     name: "",
@@ -18,6 +19,8 @@ export default function RequestPage() {
     builderIds: [],
   });
   const [errors, setErrors] = useState<Record<string, string>>({});
+  const [submitting, setSubmitting] = useState(false);
+  const [submitError, setSubmitError] = useState("");
 
   useEffect(() => {
     const stored = sessionStorage.getItem("iematch_request_builders");
@@ -63,13 +66,47 @@ export default function RequestPage() {
     return Object.keys(newErrors).length === 0;
   }, [form]);
 
-  const handleSubmit = useCallback(() => {
-    if (!validate()) return;
+  const handleSubmit = useCallback(async () => {
+    if (!validate() || submitting) return;
 
-    // プロトタイプでは送信せず、完了画面へ遷移
-    sessionStorage.setItem("iematch_request_form", JSON.stringify(form));
-    router.push("/request/complete");
-  }, [validate, form, router]);
+    setSubmitting(true);
+    setSubmitError("");
+
+    try {
+      // sessionStorageから診断データを取得
+      const storedAnswers = sessionStorage.getItem("iematch_answers");
+      const parsedAnswers = storedAnswers ? JSON.parse(storedAnswers) : {};
+
+      const res = await fetch("/api/leads", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          name: form.name,
+          email: form.email,
+          phone: form.phone,
+          address: form.address,
+          message: form.message,
+          builderIds: form.builderIds,
+          diagnosisType: parsedAnswers.diagnosisType ?? null,
+          answers: parsedAnswers.answers ?? null,
+        }),
+      });
+
+      const result = await res.json();
+
+      if (!res.ok) {
+        setSubmitError(result.error ?? "送信に失敗しました。もう一度お試しください。");
+        return;
+      }
+
+      sessionStorage.setItem("iematch_request_form", JSON.stringify(form));
+      router.push("/request/complete");
+    } catch {
+      setSubmitError("通信エラーが発生しました。もう一度お試しください。");
+    } finally {
+      setSubmitting(false);
+    }
+  }, [validate, submitting, form, router]);
 
   return (
     <div className="flex min-h-screen flex-col" style={{ background: "#F5F4F0" }}>
@@ -154,13 +191,37 @@ export default function RequestPage() {
             に同意したものとみなされます。ご入力いただいた情報は、資料請求先の住宅会社への紹介目的のみに使用いたします。
           </p>
 
-          <button
-            type="button"
-            onClick={handleSubmit}
-            className="mt-5 w-full rounded-full bg-brand py-4 text-base font-bold text-white shadow-lg transition-colors hover:bg-brand-dark"
-          >
-            送信する
-          </button>
+          {submitError && (
+            <p className="mt-4 rounded-xl bg-red-50 px-4 py-2.5 text-xs text-red-600">
+              {submitError}
+            </p>
+          )}
+
+          <div className="mt-5 flex gap-3">
+            <button
+              type="button"
+              onClick={() => router.push("/result")}
+              disabled={submitting}
+              className="flex h-14 flex-1 items-center justify-center rounded-full border border-black/10 text-sm font-medium text-gray-600 transition-colors hover:bg-gray-50 disabled:opacity-50"
+            >
+              戻る
+            </button>
+            <button
+              type="button"
+              onClick={handleSubmit}
+              disabled={submitting}
+              className="flex h-14 flex-[2] items-center justify-center rounded-full bg-brand text-base font-bold text-white shadow-lg transition-colors hover:bg-brand-dark disabled:opacity-70"
+            >
+              {submitting ? (
+                <>
+                  <span className="mr-2 inline-block h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent" />
+                  送信中...
+                </>
+              ) : (
+                "送信する"
+              )}
+            </button>
+          </div>
 
           <p className="mt-2 text-center text-[10px] text-muted-foreground">
             SSL暗号化通信で安全に送信されます

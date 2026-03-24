@@ -1,4 +1,5 @@
 import { Answer, Builder, Recommendation } from "@/types";
+import { nagoyaWards } from "@/data/areas";
 
 // === ヘルパー関数 ===
 function getAnswer(answers: Answer[], questionId: string): string | undefined {
@@ -19,11 +20,23 @@ function getRanked(answers: Answer[], questionId: string): string[] {
   return a.rank ?? (Array.isArray(a.value) ? a.value : [a.value]);
 }
 
+// ユーザー選択エリアを工務店データの区単位に展開
+function expandArea(area: string): readonly string[] {
+  if (area === "名古屋市") return nagoyaWards;
+  return [area];
+}
+
 // === 第1段階: 必須フィルタ ===
 export function filterBuilders(answers: Answer[], builders: Builder[]): Builder[] {
   return builders.filter((b) => {
-    const userArea = getAnswer(answers, "Q7");
-    if (userArea && !b.b1_areas.includes(userArea)) return false;
+    // Q7は配列（複数エリア）または文字列（レガシー）
+    const userAreas = getAnswerArray(answers, "Q7");
+    if (userAreas.length > 0) {
+      // 選択エリアを展開して、いずれかに工務店が対応しているかチェック
+      const expandedAreas = userAreas.flatMap(expandArea);
+      const hasMatch = expandedAreas.some((area) => b.b1_areas.includes(area));
+      if (!hasMatch) return false;
+    }
 
     const userBudget = getAnswer(answers, "Q4");
     if (userBudget && userBudget !== "undecided" && !b.b2_priceRanges.includes(userBudget)) {
@@ -81,7 +94,7 @@ function calcValuesAxisScore(userRanked: string[], builder: Builder): number {
 }
 
 // === 価値観適合: 接客スタイル（12点満点）===
-function calcStyleScore(q19Value: string | undefined, builder: Builder): number {
+function calcStyleScore(q19Values: string[], builder: Builder): number {
   const mapping: Record<string, string> = {
     listening: "nurturing",
     proposal: "proactive",
@@ -90,11 +103,15 @@ function calcStyleScore(q19Value: string | undefined, builder: Builder): number 
     expertise: "expert",
   };
 
-  if (!q19Value || !mapping[q19Value]) return 0;
-
-  const targetStyle = mapping[q19Value];
-  const matchCount = builder.b6_styles.filter((s) => s === targetStyle).length;
-  return Math.min(matchCount * 6, 12);
+  let score = 0;
+  for (const q19Value of q19Values) {
+    const targetStyle = mapping[q19Value];
+    if (!targetStyle) continue;
+    if (builder.b6_styles.includes(targetStyle)) {
+      score += 6;
+    }
+  }
+  return Math.min(score, 12);
 }
 
 // === 性能適合: 重視性能（14点満点）===
@@ -177,7 +194,7 @@ export function calculateMatchScore(answers: Answer[], builder: Builder): number
   const q15 = getRanked(answers, "Q15");
   const q16 = getAnswerArray(answers, "Q16");
   const q17 = getRanked(answers, "Q17");
-  const q19 = getAnswer(answers, "Q19");
+  const q19 = getAnswerArray(answers, "Q19");
 
   const exterior = calcExteriorScore(q13, builder);
   const interior = calcInteriorScore(q14, builder);

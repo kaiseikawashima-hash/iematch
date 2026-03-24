@@ -11,6 +11,7 @@ import { MultiSelectCard } from "@/components/diagnosis/MultiSelectCard";
 import { ImageSelectCard } from "@/components/diagnosis/ImageSelectCard";
 import { RankedSelectCard } from "@/components/diagnosis/RankedSelectCard";
 import { CascadeSelect } from "@/components/diagnosis/CascadeSelect";
+import { AreaMultiSelect } from "@/components/diagnosis/AreaMultiSelect";
 import { FamilyInput } from "@/components/diagnosis/FamilyInput";
 
 // 条件分岐を考慮した表示質問リストを算出
@@ -36,7 +37,9 @@ export default function DiagnosisPage() {
     futurePlan: "same",
   });
 
-  // エリア用ステート
+  // エリア用ステート（複数選択）
+  const [selectedAreas, setSelectedAreas] = useState<string[]>([]);
+  // レガシー: cascade用（将来削除可）
   const [prefecture, setPrefecture] = useState("");
   const [city, setCity] = useState("");
 
@@ -122,6 +125,18 @@ export default function DiagnosisPage() {
     [currentQuestion, currentAnswer, updateAnswer]
   );
 
+  // エリア選択トグルハンドラ
+  const handleAreaToggle = useCallback(
+    (area: string) => {
+      setSelectedAreas((prev) =>
+        prev.includes(area)
+          ? prev.filter((a) => a !== area)
+          : [...prev, area]
+      );
+    },
+    []
+  );
+
   // 「次へ」ボタンの有効判定
   const canProceed = useMemo(() => {
     if (!currentQuestion) return false;
@@ -143,6 +158,8 @@ export default function DiagnosisPage() {
         if (ranked.includes("none")) return true;
         return ranked.length >= (currentQuestion.maxSelect ?? 1);
       }
+      case "area":
+        return selectedAreas.length > 0;
       case "cascade":
         return !!city;
       case "family":
@@ -150,11 +167,16 @@ export default function DiagnosisPage() {
       default:
         return false;
     }
-  }, [currentQuestion, currentAnswer, city, family]);
+  }, [currentQuestion, currentAnswer, selectedAreas, city, family]);
 
   // 次へ
   const handleNext = useCallback(() => {
     if (!currentQuestion || !canProceed) return;
+
+    // area の場合、回答を保存（複数選択 → 配列）
+    if (currentQuestion.type === "area" && selectedAreas.length > 0) {
+      updateAnswer(currentQuestion.id, selectedAreas);
+    }
 
     // cascade の場合、回答を保存
     if (currentQuestion.type === "cascade" && city) {
@@ -171,22 +193,30 @@ export default function DiagnosisPage() {
     }
 
     // 最後の質問なら結果画面へ
-    const nextVisibleQuestions = getVisibleQuestions(
-      currentQuestion.type === "cascade"
-        ? [...answers.filter((a) => a.questionId !== currentQuestion.id), { questionId: currentQuestion.id, value: city }]
-        : answers
-    );
+    const buildAnswersForNavigation = () => {
+      if (currentQuestion.type === "area") {
+        return [...answers.filter((a) => a.questionId !== currentQuestion.id), { questionId: currentQuestion.id, value: selectedAreas }];
+      }
+      if (currentQuestion.type === "cascade") {
+        return [...answers.filter((a) => a.questionId !== currentQuestion.id), { questionId: currentQuestion.id, value: city }];
+      }
+      return answers;
+    };
+
+    const nextVisibleQuestions = getVisibleQuestions(buildAnswersForNavigation());
 
     if (currentIndex >= nextVisibleQuestions.length - 1) {
       // 回答データをsessionStorageに保存して結果画面へ
-      const finalAnswers = currentQuestion.type === "cascade"
-        ? [...answers.filter((a) => a.questionId !== currentQuestion.id), { questionId: currentQuestion.id, value: city }]
-        : currentQuestion.type === "family"
-          ? [...answers.filter((a) => a.questionId !== currentQuestion.id), {
-              questionId: currentQuestion.id,
-              value: [`adults:${family.adults}`, `children:${family.children}`, `plan:${family.futurePlan}`],
-            }]
-          : answers;
+      const finalAnswers = currentQuestion.type === "area"
+        ? [...answers.filter((a) => a.questionId !== currentQuestion.id), { questionId: currentQuestion.id, value: selectedAreas }]
+        : currentQuestion.type === "cascade"
+          ? [...answers.filter((a) => a.questionId !== currentQuestion.id), { questionId: currentQuestion.id, value: city }]
+          : currentQuestion.type === "family"
+            ? [...answers.filter((a) => a.questionId !== currentQuestion.id), {
+                questionId: currentQuestion.id,
+                value: [`adults:${family.adults}`, `children:${family.children}`, `plan:${family.futurePlan}`],
+              }]
+            : answers;
 
       sessionStorage.setItem(
         "iematch_answers",
@@ -200,7 +230,7 @@ export default function DiagnosisPage() {
     }
 
     setCurrentIndex((prev) => prev + 1);
-  }, [currentQuestion, canProceed, currentIndex, answers, city, family, updateAnswer, router]);
+  }, [currentQuestion, canProceed, currentIndex, answers, selectedAreas, city, family, updateAnswer, router]);
 
   // 戻る
   const handleBack = useCallback(() => {
@@ -280,6 +310,13 @@ export default function DiagnosisPage() {
           />
         )}
 
+        {currentQuestion.type === "area" && (
+          <AreaMultiSelect
+            selected={selectedAreas}
+            onToggle={handleAreaToggle}
+          />
+        )}
+
         {currentQuestion.type === "cascade" && (
           <CascadeSelect
             selectedPrefecture={prefecture}
@@ -321,6 +358,12 @@ export default function DiagnosisPage() {
             {currentIndex >= visibleQuestions.length - 1 ? "診断結果を見る" : "次へ進む"}
             {currentQuestion.type === "multi" && selectedArray.length > 0 && (
               <span className="ml-1">（{selectedArray.length}件選択中）</span>
+            )}
+            {currentQuestion.type === "ranked" && rankedValues.length > 0 && !rankedValues.includes("none") && (
+              <span className="ml-1">（{rankedValues.length}件選択中）</span>
+            )}
+            {currentQuestion.type === "area" && selectedAreas.length > 0 && (
+              <span className="ml-1">（{selectedAreas.length}件選択中）</span>
             )}
           </button>
         </div>

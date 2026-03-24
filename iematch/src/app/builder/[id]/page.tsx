@@ -2,7 +2,7 @@
 
 import { use } from "react";
 import { useRouter } from "next/navigation";
-import { builders } from "@/data/builders";
+import { useBuilders } from "@/hooks/useBuilders";
 import { Header } from "@/components/layout/Header";
 import { Footer } from "@/components/layout/Footer";
 
@@ -13,7 +13,16 @@ type Props = {
 export default function BuilderDetailPage({ params }: Props) {
   const { id } = use(params);
   const router = useRouter();
+  const { builders, loading } = useBuilders();
   const builder = builders.find((b) => b.id === id);
+
+  if (loading) {
+    return (
+      <div className="flex min-h-screen items-center justify-center">
+        <div className="mx-auto h-8 w-8 animate-spin rounded-full border-2 border-brand border-t-transparent" />
+      </div>
+    );
+  }
 
   if (!builder) {
     return (

@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { DiagnosisResult, UserAnswers } from "@/types";
 import { runDiagnosis } from "@/lib/diagnosis";
 import { getRecommendations } from "@/lib/matching";
-import { builders } from "@/data/builders";
+import { useBuilders } from "@/hooks/useBuilders";
 import { typeDefinitions } from "@/data/types";
 import { Header } from "@/components/layout/Header";
 import { Footer } from "@/components/layout/Footer";
@@ -15,9 +15,12 @@ import { BuilderCard } from "@/components/result/BuilderCard";
 
 export default function ResultPage() {
   const router = useRouter();
+  const { builders, loading: buildersLoading } = useBuilders();
   const [result, setResult] = useState<DiagnosisResult | null>(null);
 
   useEffect(() => {
+    if (buildersLoading) return;
+
     const stored = sessionStorage.getItem("iematch_answers");
     if (!stored) {
       router.push("/diagnosis");
@@ -29,7 +32,7 @@ export default function ResultPage() {
     const recommendations = getRecommendations(userAnswers.answers, builders);
 
     setResult({ ...diagnosisBase, recommendations });
-  }, [router]);
+  }, [router, builders, buildersLoading]);
 
   if (!result) {
     return (

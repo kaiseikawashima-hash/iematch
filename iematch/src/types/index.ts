@@ -14,6 +14,7 @@ export type QuestionType =
   | "ranked"
   | "image"
   | "cascade"
+  | "area"
   | "family";
 
 export type QuestionOption = {

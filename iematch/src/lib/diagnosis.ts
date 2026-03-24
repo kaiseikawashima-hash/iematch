@@ -264,29 +264,31 @@ function scoreQ18(scores: TypeScores, answers: Answer[]): TypeScores {
   return s;
 }
 
-// === Q19: 担当者への期待 ===
+// === Q19: 担当者への期待（複数選択対応） ===
 function scoreQ19(scores: TypeScores, answers: Answer[]): TypeScores {
-  const value = getAnswer(answers, "Q19");
+  const selected = getAnswerArray(answers, "Q19");
   let s = { ...scores };
 
-  switch (value) {
-    case "listening":
-      s = addScore(s, "trustPartner", 3);
-      s = addScore(s, "lifestyleDesign", 2);
-      break;
-    case "proposal":
-      s = addScore(s, "designFirst", 3);
-      s = addScore(s, "performanceExpert", 2);
-      break;
-    case "response":
-      s = addScore(s, "costBalance", 2);
-      break;
-    case "honest":
-      s = addScore(s, "trustPartner", 4);
-      break;
-    case "expertise":
-      s = addScore(s, "performanceExpert", 4);
-      break;
+  for (const value of selected) {
+    switch (value) {
+      case "listening":
+        s = addScore(s, "trustPartner", 3);
+        s = addScore(s, "lifestyleDesign", 2);
+        break;
+      case "proposal":
+        s = addScore(s, "designFirst", 3);
+        s = addScore(s, "performanceExpert", 2);
+        break;
+      case "response":
+        s = addScore(s, "costBalance", 2);
+        break;
+      case "honest":
+        s = addScore(s, "trustPartner", 4);
+        break;
+      case "expertise":
+        s = addScore(s, "performanceExpert", 4);
+        break;
+    }
   }
   return s;
 }

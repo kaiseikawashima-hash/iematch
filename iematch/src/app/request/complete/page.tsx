@@ -2,12 +2,13 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { builders } from "@/data/builders";
+import { useBuilders } from "@/hooks/useBuilders";
 import { Header } from "@/components/layout/Header";
 import { Footer } from "@/components/layout/Footer";
 
 export default function RequestCompletePage() {
   const router = useRouter();
+  const { builders } = useBuilders();
   const [builderIds, setBuilderIds] = useState<string[]>([]);
 
   useEffect(() => {
