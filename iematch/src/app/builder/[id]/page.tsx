@@ -37,19 +37,45 @@ export default function BuilderDetailPage({ params }: Props) {
       <Header />
 
       <main className="mx-auto w-full max-w-lg flex-1 px-4 py-6">
-        {/* 施工事例写真ギャラリー */}
-        <div className="grid grid-cols-2 gap-2 overflow-hidden rounded-2xl">
-          {builder.photos.map((photo, i) => (
-            <div
-              key={i}
-              className={`bg-gradient-to-br from-gray-100 to-gray-200 ${
-                i === 0 ? "col-span-2 h-48" : "h-32"
-              } flex items-center justify-center text-xs text-gray-400`}
-            >
-              {photo.category === "exterior" ? "外観写真" : "内装写真"}
+        {/* 施工事例カルーセル */}
+        <section className="overflow-hidden rounded-2xl">
+          <div className="flex snap-x snap-mandatory overflow-x-auto scrollbar-hide">
+            {builder.photos.length > 0 ? (
+              builder.photos.map((photo, i) => (
+                <div
+                  key={i}
+                  className="h-[200px] w-full flex-none snap-center bg-gradient-to-br from-gray-100 to-gray-200"
+                >
+                  {photo.url ? (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img
+                      src={photo.url}
+                      alt={photo.category === "exterior" ? "外観写真" : "内装写真"}
+                      className="h-full w-full object-cover"
+                    />
+                  ) : (
+                    <div className="flex h-full items-center justify-center text-sm text-gray-400">
+                      {photo.category === "exterior" ? "外観写真" : "内装写真"}
+                    </div>
+                  )}
+                </div>
+              ))
+            ) : (
+              <div className="h-[200px] w-full flex-none bg-gradient-to-br from-gray-100 to-gray-200">
+                <div className="flex h-full items-center justify-center text-sm text-gray-400">
+                  施工事例写真
+                </div>
+              </div>
+            )}
+          </div>
+          {builder.photos.length > 1 && (
+            <div className="flex justify-center gap-1.5 bg-white py-2">
+              {builder.photos.map((_, i) => (
+                <div key={i} className="h-1.5 w-1.5 rounded-full bg-gray-300" />
+              ))}
             </div>
-          ))}
-        </div>
+          )}
+        </section>
 
         {/* 会社基本情報 */}
         <section className="mt-4 rounded-2xl bg-white p-5 shadow-sm">

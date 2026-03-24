@@ -1,9 +1,10 @@
 "use client";
 
-import { useState, useCallback, useMemo } from "react";
+import { useState, useCallback, useMemo, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { Answer, FamilyData } from "@/types";
-import { questions } from "@/data/questions";
+import { questions as baseQuestions } from "@/data/questions";
+import { getImages, applyImageOverrides } from "@/lib/getImages";
 import { Header } from "@/components/layout/Header";
 import { ProgressBar } from "@/components/diagnosis/ProgressBar";
 import { SingleSelectCard } from "@/components/diagnosis/SingleSelectCard";
@@ -13,9 +14,13 @@ import { RankedSelectCard } from "@/components/diagnosis/RankedSelectCard";
 import { CascadeSelect } from "@/components/diagnosis/CascadeSelect";
 import { AreaMultiSelect } from "@/components/diagnosis/AreaMultiSelect";
 import { FamilyInput } from "@/components/diagnosis/FamilyInput";
+import { InsightCard } from "@/components/diagnosis/InsightCard";
+
+// インサイト表示対象の質問ID
+const INSIGHT_TRIGGER_IDS = new Set(["Q6", "Q14", "Q19"]);
 
 // 条件分岐を考慮した表示質問リストを算出
-function getVisibleQuestions(answers: Answer[]) {
+function getVisibleQuestions(answers: Answer[], questions: typeof baseQuestions) {
   return questions.filter((q) => {
     if (!q.condition) return true;
     const dep = answers.find((a) => a.questionId === q.condition!.dependsOn);
@@ -30,6 +35,27 @@ export default function DiagnosisPage() {
   const [answers, setAnswers] = useState<Answer[]>([]);
   const [currentIndex, setCurrentIndex] = useState(0);
 
+  // Supabaseから画像URLを取得してQ13・Q14を上書き
+  const [questions, setQuestions] = useState(baseQuestions);
+  useEffect(() => {
+    getImages().then((imageMap) => {
+      if (imageMap) {
+        setQuestions(applyImageOverrides(baseQuestions, imageMap));
+      }
+    });
+  }, []);
+
+  // インサイト表示用ステート
+  const [showInsight, setShowInsight] = useState(false);
+  const [insightText, setInsightText] = useState<string | null>(null);
+  const [insightLoading, setInsightLoading] = useState(false);
+  const [insightTriggerId, setInsightTriggerId] = useState<string | null>(null);
+
+  // 修正フィードバック用
+  const [corrections, setCorrections] = useState<
+    { afterQuestion: string; text: string }[]
+  >([]);
+
   // 家族構成用ステート
   const [family, setFamily] = useState<FamilyData>({
     adults: 2,
@@ -43,7 +69,7 @@ export default function DiagnosisPage() {
   const [prefecture, setPrefecture] = useState("");
   const [city, setCity] = useState("");
 
-  const visibleQuestions = useMemo(() => getVisibleQuestions(answers), [answers]);
+  const visibleQuestions = useMemo(() => getVisibleQuestions(answers, questions), [answers, questions]);
   const currentQuestion = visibleQuestions[currentIndex];
   const totalCategories = 7;
 
@@ -169,6 +195,78 @@ export default function DiagnosisPage() {
     }
   }, [currentQuestion, currentAnswer, selectedAreas, city, family]);
 
+  // インサイトを取得
+  const fetchInsight = useCallback(
+    async (currentAnswers: Answer[], category: string, triggerId: string) => {
+      setShowInsight(true);
+      setInsightLoading(true);
+      setInsightText(null);
+      setInsightTriggerId(triggerId);
+      try {
+        const res = await fetch("/api/insight", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            answers: currentAnswers,
+            currentCategory: category,
+          }),
+        });
+        const data = await res.json();
+        if (data.insight) {
+          setInsightText(data.insight);
+        } else {
+          // API未設定 or エラー → スキップして次へ
+          setShowInsight(false);
+          setCurrentIndex((prev) => prev + 1);
+        }
+      } catch {
+        // ネットワークエラー → スキップして次へ
+        setShowInsight(false);
+        setCurrentIndex((prev) => prev + 1);
+      } finally {
+        setInsightLoading(false);
+      }
+    },
+    []
+  );
+
+  // インサイト画面を閉じて次へ（最後の質問なら結果画面へ）
+  const handleInsightDismiss = useCallback(() => {
+    setShowInsight(false);
+    setInsightText(null);
+    setInsightTriggerId(null);
+
+    const nextVisibleQuestions = getVisibleQuestions(answers, questions);
+    if (currentIndex >= nextVisibleQuestions.length - 1) {
+      sessionStorage.setItem(
+        "iematch_answers",
+        JSON.stringify({
+          answers,
+          completedAt: new Date().toISOString(),
+        })
+      );
+      sessionStorage.setItem("iematch_corrections", JSON.stringify(corrections));
+      router.push("/result");
+      return;
+    }
+
+    setCurrentIndex((prev) => prev + 1);
+  }, [answers, currentIndex, router, corrections, questions]);
+
+  // 「ちょっと違うかも」→ 修正テキストを受け取って次へ
+  const handleInsightDeny = useCallback(
+    (correctionText: string) => {
+      if (correctionText.trim() && insightTriggerId) {
+        setCorrections((prev) => [
+          ...prev,
+          { afterQuestion: insightTriggerId, text: correctionText.trim() },
+        ]);
+      }
+      handleInsightDismiss();
+    },
+    [insightTriggerId, handleInsightDismiss]
+  );
+
   // 次へ
   const handleNext = useCallback(() => {
     if (!currentQuestion || !canProceed) return;
@@ -203,7 +301,13 @@ export default function DiagnosisPage() {
       return answers;
     };
 
-    const nextVisibleQuestions = getVisibleQuestions(buildAnswersForNavigation());
+    // インサイト対象の質問ならGeminiに問い合わせ（最終質問でも表示）
+    if (INSIGHT_TRIGGER_IDS.has(currentQuestion.id)) {
+      fetchInsight(buildAnswersForNavigation(), currentQuestion.categoryLabel, currentQuestion.id);
+      return;
+    }
+
+    const nextVisibleQuestions = getVisibleQuestions(buildAnswersForNavigation(), questions);
 
     if (currentIndex >= nextVisibleQuestions.length - 1) {
       // 回答データをsessionStorageに保存して結果画面へ
@@ -225,12 +329,13 @@ export default function DiagnosisPage() {
           completedAt: new Date().toISOString(),
         })
       );
+      sessionStorage.setItem("iematch_corrections", JSON.stringify(corrections));
       router.push("/result");
       return;
     }
 
     setCurrentIndex((prev) => prev + 1);
-  }, [currentQuestion, canProceed, currentIndex, answers, selectedAreas, city, family, updateAnswer, router]);
+  }, [currentQuestion, canProceed, currentIndex, answers, selectedAreas, city, family, updateAnswer, router, fetchInsight, corrections]);
 
   // 戻る
   const handleBack = useCallback(() => {
@@ -240,6 +345,24 @@ export default function DiagnosisPage() {
   }, [currentIndex]);
 
   if (!currentQuestion) return null;
+
+  // インサイト画面表示中
+  if (showInsight) {
+    return (
+      <div className="flex min-h-screen flex-col" style={{ background: "#F5F4F0" }}>
+        <Header />
+        <main className="mx-auto w-full max-w-lg flex-1 px-4 py-6">
+          <InsightCard
+            insight={insightText}
+            loading={insightLoading}
+            onConfirm={handleInsightDismiss}
+            onDeny={handleInsightDeny}
+            onSkip={handleInsightDismiss}
+          />
+        </main>
+      </div>
+    );
+  }
 
   const selectedArray = Array.isArray(currentAnswer?.value)
     ? currentAnswer!.value

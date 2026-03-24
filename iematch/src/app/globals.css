@@ -39,3 +39,12 @@ body {
   font-size: 13px;
   line-height: 1.7;
 }
+
+/* カルーセル用スクロールバー非表示 */
+.scrollbar-hide {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;
+}

@@ -1,7 +1,7 @@
 # イエマッチAI 開発TODOリスト
 
 **作成日**: 2026-03-18
-**最終更新**: 2026-03-22
+**最終更新**: 2026-03-24
 
 ---
 
@@ -184,16 +184,141 @@
   - 「SHO-SAN社内・加盟工務店専用」注記
   - 選択肢をquestions.tsと統一済み
 
-## Phase 11: 仕上げ
+## Phase 11: デプロイ・Supabase接続・Gemini連携
 
-- [ ] 11-1. レスポンシブ対応（375px〜スマホ優先）
-- [ ] 11-2. ページ遷移アニメーション
-- [ ] 11-3. 全フロー通しテスト（P1→P2→P3→P4→P5→P6）
-- [ ] 11-4. Vercelデプロイ
-- [ ] 11-5. Supabase接続・動作確認（先輩から接続情報を受け取り後）
-- [ ] 11-6. RLSポリシー設定（本番前に先輩と相談）
-- [ ] 11-7. Q13・Q14の画像素材設定（imageUrl を実画像パスに差し替え）
-- [ ] 11-8. メール送信設定（資料請求時の確認メール・工務店への通知メール）
+- [x] 11-1. GitHubプッシュ + Vercelデプロイ準備
+  - GitHub: kaiseikawashima-hash/iematch にプッシュ済み
+  - Vercelデプロイ時の Root Directory は `iematch` に設定
+- [x] 11-2. Gemini API「聞いてくる」機能（インサイト生成）
+  - @google/generative-ai パッケージインストール
+  - POST /api/insight: Gemini 2.0 Flashでこれまでの回答を分析、共感的メッセージ生成
+  - InsightCardコンポーネント: 薄いグリーンカード + 確認/違う/スキップボタン
+  - Q6・Q14・Q19の回答後にインタースティシャル表示
+  - Q19（最終質問）後はInsightCard → 結果画面に遷移
+  - GEMINI_API_KEY未設定 or APIエラー時は自動スキップ
+  - .env.local に GEMINI_API_KEY 設定済み
+- [x] 11-3. Q13・Q14の画像素材設定
+  - Unsplashのフリー画像URLを設定（外観6種 + 内装6種）
+  - next.config.ts に images.remotePatterns で images.unsplash.com を許可
+- [x] 11-4. Supabaseプロジェクト作成・テーブル作成・データ投入
+  - プロジェクト名: iematch（リージョン: ap-northeast-1）
+  - テーブル: builders, builder_photos, builder_reviews, leads, settings, images
+  - builders テーブルにダミー30社データINSERT済み
+  - settings テーブルにプライバシーポリシー・利用規約の初期値INSERT済み
+  - .env.local に NEXT_PUBLIC_SUPABASE_URL / NEXT_PUBLIC_SUPABASE_ANON_KEY 設定済み
+- [x] 11-5. 管理画面の実装（/admin）
+  - パスワード保護（パスワード: iematch2024、sessionStorage認証）
+  - タブ①: 工務店管理（一覧表示・削除・新規登録リンク）
+  - タブ②: テイスト画像管理（Q13/Q14の画像URL編集・プレビュー付き）
+  - タブ③: プライバシーポリシー・利用規約（テキスト編集→Supabase保存）
+  - タブ④: リード一覧（資料請求データ表示・削除）
+  - 管理用API: /api/admin/builders, /api/admin/leads, /api/admin/settings, /api/admin/images
+  - 既存の /admin/register は維持
+- [x] 11-6. プライバシーポリシーページ（/privacy）
+  - Supabase settings テーブルから privacy_policy を取得して表示
+- [x] 11-7. メール送信設定（資料請求時の確認メール・工務店への通知メール）
+  - Resend（resend.com）によるメール送信をAPIに組み込み
+  - メールA: 工務店へのリード通知（BUILDER_NOTIFICATION_EMAIL宛）
+    - ユーザー情報・診断結果・主な希望（Q4/Q7/Q15/Q17のラベル変換）
+  - メールB: ユーザーへの完了確認（ユーザーのメールアドレス宛）
+    - 請求先一覧（箇条書き）・次のステップ案内
+  - RESEND_API_KEY未設定時はコンソールログのみ（Supabase未接続時と同方式）
+  - メール送信失敗時もリード保存は成功扱い
+  - builderIds→会社名: Supabase優先、未接続時はbuilders.tsからフォールバック
+  - .env.local.example にRESEND_API_KEY/RESEND_FROM_EMAIL/BUILDER_NOTIFICATION_EMAIL/GEMINI_API_KEY追記
+
+## Phase 11.5: InsightCard改善・フィードバック機能
+
+- [x] 11.5-1. InsightCard「ちょっと違うかも」の追加入力機能
+  - 「ちょっと違うかも」押下で追加入力欄を表示（テキストエリア + 送信して次へ/戻るボタン）
+  - 入力は任意（空でも送信して次へ可能）
+  - onDenyの型をstring引数付きに変更
+- [x] 11.5-2. corrections（修正フィードバック）のsessionStorage保存
+  - 型: { afterQuestion: "Q6"|"Q13"|"Q19", text: string }[]
+  - diagnosis/page.tsxにcorrections state・insightTriggerId追跡を追加
+  - 結果画面遷移時に "iematch_corrections" として保存
+- [x] 11.5-3. 結果画面のアドバイス文にcorrections反映
+  - sessionStorageからcorrections取得
+  - 1件以上の場合「なお、診断中にご指摘いただいた点（...）も考慮しておすすめを選んでいます。」を表示
+
+## Phase 11.6: プライバシーポリシー・利用規約・フッター改善
+
+- [x] 11.6-1. フッターのリンク有効化
+  - プライバシーポリシー・利用規約をNext.js Linkに変更（/privacy, /terms）
+  - ホバー時にunderline表示
+- [x] 11.6-2. プライバシーポリシーページ（/privacy）の正式文言化
+  - 6セクション構成（個人情報の取扱い・利用目的・第三者提供・管理・開示/訂正/削除・お問い合わせ）
+- [x] 11.6-3. 利用規約ページ（/terms）の新規作成
+  - 7セクション構成（サービス概要・利用条件・禁止事項・免責事項・変更/中断・知的財産権・規約の変更）
+- [x] 11.6-4. 資料請求フォームのプライバシーポリシー同意をチェックボックスに変更
+  - みなし同意テキスト → チェックボックス + /privacyリンク（別タブ）に変更
+  - 未チェック時は送信ボタンをグレーアウト（disabled + bg-gray-300）
+  - チェック後にブランドカラーで有効化
+
+## Phase 11.7: Supabaseでのポリシー管理
+
+- [x] 11.7-1. settingsテーブルの初期データ更新
+  - privacy_policy / terms_of_service の value を正式文言に UPDATE
+- [x] 11.7-2. /privacy と /terms をSupabase対応に変更
+  - async サーバーコンポーネント化（Supabaseから settings テーブルの該当キーを取得）
+  - Supabase未接続時は FALLBACK_TEXT（静的テキスト）を表示
+  - revalidate = 60（ISR: 60秒ごとに再生成）
+- [x] 11.7-3. admin管理画面との連携確認
+  - 既存の /api/admin/settings（GET/PUT）がupsertでそのまま動作
+  - admin で保存 → Supabase更新 → ISR再生成で /privacy, /terms に自動反映
+
+## Phase 11.8: 施工事例・お客様の声・ダミーデータ拡充
+
+- [x] 11.8-1. 施工事例カルーセルの実装
+  - BuilderCard.tsx: 静的placeholder → 横スクロールsnap式カルーセル（h-[200px]）
+  - builder/[id]/page.tsx: グリッドギャラリー → 横スクロールカルーセル + ドットインジケーター
+  - globals.css: .scrollbar-hide ユーティリティ追加
+  - 画像URLあり → img表示、空 → グレーplaceholder「施工事例写真」
+- [x] 11.8-2. 全30社のreviews（お客様の声）をタイプ別パターンに更新
+  - デザイン系（001-005）: デザイン系レビュー2〜3件
+  - 性能系（006-010）: 性能系レビュー2〜3件
+  - コスパ系（011-015）: コスパ系レビュー2〜3件
+  - 暮らし系（016-020）: 暮らし系レビュー2〜3件
+  - 信頼系（021-025）: 信頼系レビュー2〜3件
+  - バランス系（026-030）: バランス系レビュー2〜3件
+- [x] 11.8-3. 全30社のphotosをダミーデータに統一
+  - url: ""（空文字）、exterior x1 + interior x2 の3件構成
+- [x] 11.8-4. Supabaseにreviews・photos反映
+  - builder_photos: 90件INSERT（30社 x 3枚）
+  - builder_reviews: 72件INSERT（30社 x 2〜3件）
+
+## Phase 11.9: Geminiプロンプト改善・結果ページ刷新
+
+- [x] 11.9-1. InsightCard Geminiプロンプト改善（/api/insight）
+  - 「数字をそのまま使わない」「機械的な表現禁止」のネガティブルール追加
+  - 「気持ち・価値観・不安を読み取る」「感情ワードを使う」のポジティブルール追加
+  - 80文字以内に短縮
+- [x] 11.9-2. 結果ページを4セクション構成に刷新
+  - セクション①: あなたの家づくりタイプ（バッジ + キャッチコピー + 説明）
+  - セクション②: あなた専用の比較セット
+    - Gemini生成の比較説明文（/api/result-insight 新規作成）
+    - 1社目「ベストマッチ」バッジ（#2E5240）
+    - 2社目「あなたの最重要条件〇〇に最も強い」ラベル
+    - 3社目「新しい発見」バッジ（#F59E0B）
+    - カード: 写真カルーセル + マッチ度 + 強みタグ + トグル式「選択中/資料請求」ボタン
+    - 比較ヒントカード（#EFF6FF / #BFDBFE）
+  - セクション③: 診断詳細（レーダーチャート + 「このタイプになった理由」3ポイント抽出）
+  - セクション④: 家づくりアドバイス（強み/注意/次のステップ + corrections反映）
+- [x] 11.9-3. 比較セット説明文API（/api/result-insight）新規作成
+  - Gemini 2.0 Flashで「本命」「発見枠」を使った説明文を生成
+  - API未接続時はフォールバック（非表示）
+- [x] 11.9-4. まとめて資料請求ボタンをトグル選択連動に変更
+  - 各カードの「選択中/資料請求」ボタンで選択状態を切り替え
+  - 選択中の社数を「まとめて資料請求する（N社）」に反映
+
+## Phase 12: 仕上げ（未着手）
+
+- [ ] 12-1. レスポンシブ対応（375px〜スマホ優先）
+- [ ] 12-2. ページ遷移アニメーション
+- [ ] 12-3. 全フロー通しテスト（P1→P2→P3→P4→P5→P6）
+- [ ] 12-4. Vercelデプロイ実行
+- [ ] 12-5. RLSポリシー設定（本番前に先輩と相談）
+- [ ] 12-6. Vercel環境変数設定（GEMINI_API_KEY, RESEND_API_KEY等）
 
 ---
 
@@ -207,3 +332,9 @@
 | 2026-03-22 | Phase 10.5 愛知県対応・工務店30社化・診断ロジック修正＆検証・Q14選択肢追加 |
 | 2026-03-22 | Phase 10.6 エリア複数選択・Q19複数選択・Q15改善・戻るボタン・選択肢統一 |
 | 2026-03-22 | Phase 10.7 Supabaseテーブル定義・データ取得抽象化・API作成・工務店登録フォーム |
+| 2026-03-24 | Phase 11 デプロイ準備・Geminiインサイト機能・Unsplash画像設定・Supabase接続・管理画面・プライバシーページ |
+| 2026-03-24 | Phase 11.5 InsightCard改善・修正フィードバック機能（corrections）・結果画面反映 |
+| 2026-03-24 | Phase 11.6 フッターリンク有効化・プライバシーポリシー正式文言・利用規約新規作成・同意チェックボックス化 |
+| 2026-03-24 | Phase 11.7 Supabaseでのポリシー管理（settings→ISR反映）・admin管理画面連携確認 |
+| 2026-03-24 | Phase 11.8 施工事例カルーセル・全30社reviews/photosダミーデータ・Supabase反映 |
+| 2026-03-24 | Phase 11.9 Geminiプロンプト改善・結果ページ4セクション刷新・比較セットAPI・トグル式資料請求 |

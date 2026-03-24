@@ -21,6 +21,7 @@ export default function RequestPage() {
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [submitting, setSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState("");
+  const [privacyAgreed, setPrivacyAgreed] = useState(false);
 
   useEffect(() => {
     const stored = sessionStorage.getItem("iematch_request_builders");
@@ -184,11 +185,29 @@ export default function RequestPage() {
             </div>
           </div>
 
-          {/* プライバシーポリシー */}
-          <p className="mt-4 text-[10px] leading-relaxed text-muted-foreground">
-            「送信する」ボタンを押すことで、
-            <span className="underline">プライバシーポリシー</span>
-            に同意したものとみなされます。ご入力いただいた情報は、資料請求先の住宅会社への紹介目的のみに使用いたします。
+          {/* プライバシーポリシー同意 */}
+          <label className="mt-4 flex cursor-pointer items-start gap-3">
+            <input
+              type="checkbox"
+              checked={privacyAgreed}
+              onChange={(e) => setPrivacyAgreed(e.target.checked)}
+              className="mt-0.5 h-4 w-4 shrink-0 cursor-pointer rounded border-gray-300 accent-[#2E5240]"
+            />
+            <span className="text-xs leading-relaxed text-gray-700">
+              <a
+                href="/privacy"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="font-medium underline underline-offset-2"
+                style={{ color: "#2E5240" }}
+              >
+                プライバシーポリシー
+              </a>
+              に同意する（必須）
+            </span>
+          </label>
+          <p className="mt-1.5 pl-7 text-[10px] leading-relaxed text-muted-foreground">
+            ご入力いただいた情報は、資料請求先の住宅会社への紹介目的のみに使用いたします。
           </p>
 
           {submitError && (
@@ -209,8 +228,12 @@ export default function RequestPage() {
             <button
               type="button"
               onClick={handleSubmit}
-              disabled={submitting}
-              className="flex h-14 flex-[2] items-center justify-center rounded-full bg-brand text-base font-bold text-white shadow-lg transition-colors hover:bg-brand-dark disabled:opacity-70"
+              disabled={submitting || !privacyAgreed}
+              className={`flex h-14 flex-[2] items-center justify-center rounded-full text-base font-bold text-white shadow-lg transition-colors ${
+                privacyAgreed
+                  ? "bg-brand hover:bg-brand-dark"
+                  : "cursor-not-allowed bg-gray-300"
+              } disabled:opacity-70`}
             >
               {submitting ? (
                 <>

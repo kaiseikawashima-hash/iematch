@@ -1,3 +1,5 @@
+import Link from "next/link";
+
 export function Footer() {
   return (
     <footer className="py-8" style={{ borderTop: "1px solid #DEDBD4", background: "#F5F4F0" }}>
@@ -7,8 +9,12 @@ export function Footer() {
           あなたにぴったりの住宅会社が見つかる無料診断サービス
         </p>
         <div className="mt-4 flex justify-center gap-4 text-xs text-muted-foreground">
-          <span>プライバシーポリシー</span>
-          <span>利用規約</span>
+          <Link href="/privacy" className="underline-offset-2 transition-colors hover:text-gray-700 hover:underline">
+            プライバシーポリシー
+          </Link>
+          <Link href="/terms" className="underline-offset-2 transition-colors hover:text-gray-700 hover:underline">
+            利用規約
+          </Link>
           <span>運営会社</span>
         </div>
         <p className="mt-4 text-xs text-muted-foreground">

@@ -15,10 +15,36 @@ export function BuilderCard({ builder, matchRate, reasonText, rank }: Props) {
 
   return (
     <div className="overflow-hidden rounded-2xl bg-white shadow-sm">
-      {/* 写真プレースホルダー */}
-      <div className="relative h-40 bg-gradient-to-br from-gray-100 to-gray-200">
-        <div className="flex h-full items-center justify-center text-sm text-gray-400">
-          施工事例写真
+      {/* 施工事例カルーセル */}
+      <div className="relative">
+        <div className="flex snap-x snap-mandatory overflow-x-auto scrollbar-hide">
+          {builder.photos.length > 0 ? (
+            builder.photos.map((photo, i) => (
+              <div
+                key={i}
+                className="h-[200px] w-full flex-none snap-center bg-gradient-to-br from-gray-100 to-gray-200"
+              >
+                {photo.url ? (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img
+                    src={photo.url}
+                    alt={photo.category === "exterior" ? "外観写真" : "内装写真"}
+                    className="h-full w-full object-cover"
+                  />
+                ) : (
+                  <div className="flex h-full items-center justify-center text-sm text-gray-400">
+                    施工事例写真
+                  </div>
+                )}
+              </div>
+            ))
+          ) : (
+            <div className="h-[200px] w-full flex-none bg-gradient-to-br from-gray-100 to-gray-200">
+              <div className="flex h-full items-center justify-center text-sm text-gray-400">
+                施工事例写真
+              </div>
+            </div>
+          )}
         </div>
         <div className="absolute left-3 top-3 flex items-center gap-1.5 rounded-full bg-white/90 px-3 py-1 text-xs font-bold backdrop-blur-sm">
           <span className="text-brand">{rank}位</span>
