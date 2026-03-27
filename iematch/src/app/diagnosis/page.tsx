@@ -84,6 +84,28 @@ export default function DiagnosisPage() {
     []
   );
 
+  // ローディング画面用
+  const [isLoading, setIsLoading] = useState(false);
+  const [loadingMessageIndex, setLoadingMessageIndex] = useState(0);
+
+  const loadingMessages = useMemo(
+    () => [
+      "回答データを分析しています",
+      "あなたのタイプを判定中",
+      "最適な工務店をマッチング中",
+      "パーソナライズされた結果を生成中",
+    ],
+    []
+  );
+
+  useEffect(() => {
+    if (!isLoading) return;
+    const timer = setInterval(() => {
+      setLoadingMessageIndex((prev) => (prev + 1) % loadingMessages.length);
+    }, 2000);
+    return () => clearInterval(timer);
+  }, [isLoading, loadingMessages]);
+
   // 修正フィードバック用
   const [corrections, setCorrections] = useState<
     { afterQuestion: string; text: string }[]
@@ -317,6 +339,7 @@ export default function DiagnosisPage() {
         })
       );
       sessionStorage.setItem("iematch_corrections", JSON.stringify(corrections));
+      setIsLoading(true);
       router.push("/result");
       return;
     }
@@ -401,6 +424,7 @@ export default function DiagnosisPage() {
         })
       );
       sessionStorage.setItem("iematch_corrections", JSON.stringify(corrections));
+      setIsLoading(true);
       router.push("/result");
       return;
     }
@@ -441,6 +465,36 @@ export default function DiagnosisPage() {
   const selectedSingle =
     typeof currentAnswer?.value === "string" ? currentAnswer.value : undefined;
   const rankedValues = currentAnswer?.rank ?? [];
+
+  if (isLoading) {
+    return (
+      <div
+        className="fixed inset-0 z-50 flex items-center justify-center"
+        style={{ background: "#F5F4F0" }}
+      >
+        <div className="text-center">
+          <p className="text-sm font-medium" style={{ color: "#2E5240" }}>
+            イエマッチAI
+          </p>
+          <div
+            className="mx-auto mt-6 h-12 w-12 rounded-full border-[3px] border-t-transparent"
+            style={{
+              borderColor: "#2E5240",
+              borderTopColor: "transparent",
+              animation: "spin 1s linear infinite",
+            }}
+          />
+          <p className="mt-6 text-lg font-bold" style={{ color: "#2E5240" }}>
+            あなたに最適な工務店を診断中...
+          </p>
+          <p className="mt-2 text-sm text-gray-500">
+            {loadingMessages[loadingMessageIndex]}
+          </p>
+        </div>
+        <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
+      </div>
+    );
+  }
 
   return (
     <div className="flex min-h-screen flex-col" style={{ background: "#F5F4F0" }}>
