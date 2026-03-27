@@ -14,11 +14,22 @@ export async function POST(request: Request) {
     );
   }
 
-  const { mainType, typeLabel, displayLabel, recommendations, answers } =
+  const { mainType, typeLabel, displayLabel, recommendations, answers, corrections } =
     await request.json();
 
   const genAI = new GoogleGenerativeAI(apiKey);
   const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash" });
+
+  // corrections がある場合のみ補正セクションを追加
+  const correctionsSection =
+    Array.isArray(corrections) && corrections.length > 0
+      ? `\n## ユーザーの補正フィードバック\nユーザーは診断中に以下の補正を行いました：\n${corrections
+          .map(
+            (c: { afterQuestion: string; text: string }) =>
+              `・${c.afterQuestion}のインサイトに対して「${c.text}」と回答`
+          )
+          .join("\n")}\nこれらの補正を優先してアドバイスや説明文をパーソナライズしてください。\n`
+      : "";
 
   const prompt = `あなたは住宅カウンセラーです。
 ユーザーの診断結果（タイプ・重視ポイント・回答）をもとに、
@@ -34,7 +45,7 @@ ${typeLabel}（${displayLabel}）
 
 ## ユーザーの回答（抜粋）
 ${JSON.stringify(answers?.slice(0, 10) ?? [], null, 2)}
-
+${correctionsSection}
 ## ルール
 ・ユーザーの最重要条件を明記する
 ・「本命」「発見枠」という言葉を使う

@@ -131,10 +131,10 @@ export default function ResultPage() {
     const recommendations = getRecommendations(userAnswers.answers, builders);
 
     const storedCorrections = sessionStorage.getItem("iematch_corrections");
-    if (storedCorrections) {
-      const parsed: Correction[] = JSON.parse(storedCorrections);
-      setCorrections(parsed.filter((c) => c.text));
-    }
+    const parsedCorrections: Correction[] = storedCorrections
+      ? JSON.parse(storedCorrections).filter((c: Correction) => c.text)
+      : [];
+    setCorrections(parsedCorrections);
 
     const diagResult = { ...diagnosisBase, recommendations };
     setResult(diagResult);
@@ -148,12 +148,12 @@ export default function ResultPage() {
     setSelectedIds(new Set(displayed.slice(0, 5).map((r) => r.builderId)));
 
     // Gemini比較セット説明文を取得
-    fetchComparisonText(diagResult, userAnswers.answers);
+    fetchComparisonText(diagResult, userAnswers.answers, parsedCorrections);
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [router, builders, buildersLoading]);
 
   const fetchComparisonText = useCallback(
-    async (diagResult: DiagnosisResult, userAnswers: Answer[]) => {
+    async (diagResult: DiagnosisResult, userAnswers: Answer[], userCorrections: Correction[]) => {
       setComparisonLoading(true);
       try {
         const typeInfo = typeDefinitions[diagResult.mainType];
@@ -174,6 +174,7 @@ export default function ResultPage() {
             displayLabel: diagResult.displayLabel,
             recommendations: recData,
             answers: userAnswers,
+            corrections: userCorrections,
           }),
         });
         const data = await res.json();
