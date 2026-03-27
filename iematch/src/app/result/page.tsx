@@ -113,6 +113,7 @@ export default function ResultPage() {
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [comparisonText, setComparisonText] = useState<string | null>(null);
   const [comparisonLoading, setComparisonLoading] = useState(false);
+  const [showMore, setShowMore] = useState(false);
 
   useEffect(() => {
     if (buildersLoading) return;
@@ -199,6 +200,21 @@ export default function ResultPage() {
     });
   }, []);
 
+  // 工務店の絞り込み: マッチ度40%以上、足りなければ上位10社まで補充
+  const displayedBuilders = useMemo(() => {
+    if (!result) return [];
+    const sorted = [...result.recommendations].sort(
+      (a, b) => b.displayMatchRate - a.displayMatchRate
+    );
+    const filtered = sorted.filter((r) => r.displayMatchRate >= 40);
+    if (filtered.length >= 10) return filtered.slice(0, 10);
+    return sorted.slice(0, 10);
+  }, [result]);
+
+  const initialBuilders = displayedBuilders.slice(0, 5);
+  const extraBuilders = displayedBuilders.slice(5);
+  const recs = showMore ? displayedBuilders : initialBuilders;
+
   if (!result) {
     return (
       <div className="flex min-h-screen items-center justify-center">
@@ -212,25 +228,8 @@ export default function ResultPage() {
     );
   }
 
-  const [showMore, setShowMore] = useState(false);
-
   const typeInfo = typeDefinitions[result.mainType];
   const reasonPoints = extractReasonPoints(answers);
-
-  // 工務店の絞り込み: マッチ度40%以上、足りなければ上位10社まで補充
-  const displayedBuilders = useMemo(() => {
-    const sorted = [...result.recommendations].sort(
-      (a, b) => b.displayMatchRate - a.displayMatchRate
-    );
-    const filtered = sorted.filter((r) => r.displayMatchRate >= 40);
-    if (filtered.length >= 10) return filtered.slice(0, 10);
-    // 40%未満でもスコア上位から最大10社確保
-    return sorted.slice(0, 10);
-  }, [result.recommendations]);
-
-  const initialBuilders = displayedBuilders.slice(0, 5);
-  const extraBuilders = displayedBuilders.slice(5);
-  const recs = showMore ? displayedBuilders : initialBuilders;
 
   return (
     <div
