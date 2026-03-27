@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback, useMemo, useEffect } from "react";
+import { useState, useCallback, useMemo, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { Answer, FamilyData } from "@/types";
 import { questions as baseQuestions } from "@/data/questions";
@@ -18,6 +18,13 @@ import { InsightCard } from "@/components/diagnosis/InsightCard";
 
 // インサイト表示対象の質問ID
 const INSIGHT_TRIGGER_IDS = new Set(["Q6", "Q14", "Q19"]);
+
+// 先行呼び出しマップ: この質問の回答選択時に次のトリガーのinsightを先行取得
+const PREFETCH_MAP: Record<string, { triggerId: string; category: string }> = {
+  Q5:  { triggerId: "Q6",  category: "予算・資金計画" },
+  Q13: { triggerId: "Q14", category: "デザインの好み" },
+  Q18: { triggerId: "Q19", category: "会社選びの軸" },
+};
 
 // 条件分岐を考慮した表示質問リストを算出
 function getVisibleQuestions(answers: Answer[], questions: typeof baseQuestions) {
@@ -51,6 +58,32 @@ export default function DiagnosisPage() {
   const [insightLoading, setInsightLoading] = useState(false);
   const [insightTriggerId, setInsightTriggerId] = useState<string | null>(null);
 
+  // インサイト先行取得キャッシュ
+  const insightCacheRef = useRef<{
+    triggerId: string;
+    promise: Promise<string | null>;
+  } | null>(null);
+
+  // 先行取得を開始する（回答選択時にバックグラウンドで呼ぶ）
+  const prefetchInsight = useCallback(
+    (currentAnswers: Answer[], category: string, triggerId: string) => {
+      const promise = fetch("/api/insight", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          answers: currentAnswers,
+          currentCategory: category,
+        }),
+      })
+        .then((res) => res.json())
+        .then((data) => (data.insight as string) ?? null)
+        .catch(() => null);
+
+      insightCacheRef.current = { triggerId, promise };
+    },
+    []
+  );
+
   // 修正フィードバック用
   const [corrections, setCorrections] = useState<
     { afterQuestion: string; text: string }[]
@@ -79,15 +112,33 @@ export default function DiagnosisPage() {
     [answers, currentQuestion]
   );
 
-  // 回答を更新（イミュータブル）
+  // 回答を更新（イミュータブル）+ インサイト先行取得
   const updateAnswer = useCallback(
     (questionId: string, value: string | string[], rank?: string[]) => {
       setAnswers((prev) => {
-        const filtered = prev.filter((a) => a.questionId !== questionId);
-        return [...filtered, { questionId, value, rank }];
+        const updated = [
+          ...prev.filter((a) => a.questionId !== questionId),
+          { questionId, value, rank },
+        ];
+
+        // Q5/Q13/Q18 回答時 → 次のトリガーのinsightを先行取得
+        const prefetchTarget = PREFETCH_MAP[questionId];
+        if (prefetchTarget) {
+          prefetchInsight(updated, prefetchTarget.category, prefetchTarget.triggerId);
+        }
+
+        // Q6/Q14/Q19 回答時 → 完全なデータでinsightを先行取得（上書き）
+        if (INSIGHT_TRIGGER_IDS.has(questionId)) {
+          const q = questions.find((qq) => qq.id === questionId);
+          if (q) {
+            prefetchInsight(updated, q.categoryLabel, questionId);
+          }
+        }
+
+        return updated;
       });
     },
-    []
+    [prefetchInsight, questions]
   );
 
   // 単一選択ハンドラ
@@ -195,13 +246,33 @@ export default function DiagnosisPage() {
     }
   }, [currentQuestion, currentAnswer, selectedAreas, city, family]);
 
-  // インサイトを取得
+  // インサイトを取得（キャッシュがあれば即表示）
   const fetchInsight = useCallback(
     async (currentAnswers: Answer[], category: string, triggerId: string) => {
       setShowInsight(true);
+      setInsightTriggerId(triggerId);
+
+      // キャッシュされた先行取得結果があるか確認
+      const cached = insightCacheRef.current;
+      if (cached && cached.triggerId === triggerId) {
+        insightCacheRef.current = null;
+        setInsightLoading(true);
+        setInsightText(null);
+        try {
+          const insight = await cached.promise;
+          if (insight) {
+            setInsightText(insight);
+            setInsightLoading(false);
+            return;
+          }
+        } catch {
+          // キャッシュ失敗 → 通常フローにフォールバック
+        }
+      }
+
+      // キャッシュなし or 失敗 → 通常のAPI呼び出し
       setInsightLoading(true);
       setInsightText(null);
-      setInsightTriggerId(triggerId);
       try {
         const res = await fetch("/api/insight", {
           method: "POST",
