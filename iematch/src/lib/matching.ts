@@ -293,6 +293,6 @@ export function getRecommendations(answers: Answer[], builders: Builder[]): Reco
     return b.rawScore - a.rawScore;
   });
 
-  // 70%未満は除外、上位3社
-  return sorted.filter((r) => r.displayMatchRate >= 70).slice(0, 3);
+  // スコア降順で全件返す（絞り込みは呼び出し側で行う）
+  return sorted;
 }
