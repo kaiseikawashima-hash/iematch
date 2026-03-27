@@ -77,6 +77,8 @@ export default function RequestPage() {
       // sessionStorageから診断データを取得
       const storedAnswers = sessionStorage.getItem("iematch_answers");
       const parsedAnswers = storedAnswers ? JSON.parse(storedAnswers) : {};
+      const storedCorrections = sessionStorage.getItem("iematch_corrections");
+      const parsedCorrections = storedCorrections ? JSON.parse(storedCorrections) : [];
 
       const res = await fetch("/api/leads", {
         method: "POST",
@@ -90,6 +92,7 @@ export default function RequestPage() {
           builderIds: form.builderIds,
           diagnosisType: parsedAnswers.diagnosisType ?? null,
           answers: parsedAnswers.answers ?? null,
+          corrections: parsedCorrections,
         }),
       });
 

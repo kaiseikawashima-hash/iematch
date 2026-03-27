@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { GoogleGenerativeAI } from "@google/generative-ai";
 import { questions } from "@/data/questions";
 import { builders as localBuilders } from "@/data/builders";
 
@@ -170,6 +171,114 @@ async function sendEmails(body: {
   }
 }
 
+/**
+ * Geminiで家づくりカルテを生成しResendで送信する
+ */
+async function sendKarteMail(body: {
+  name: string;
+  email: string;
+  diagnosisType?: string;
+  answers?: Record<string, unknown>;
+  corrections?: { afterQuestion: string; text: string }[];
+}): Promise<void> {
+  const geminiKey = process.env.GEMINI_API_KEY;
+  const resendKey = process.env.RESEND_API_KEY;
+  if (!geminiKey || !resendKey) {
+    console.log("[leads] GEMINI_API_KEY or RESEND_API_KEY未設定のためカルテ送信をスキップ");
+    return;
+  }
+
+  const corrections = Array.isArray(body.corrections) ? body.corrections : [];
+  const correctionsText = corrections.length > 0
+    ? corrections.map((c) => `・${c.afterQuestion}のインサイトに対して「${c.text}」と回答`).join("\n")
+    : "";
+
+  const prompt = `あなたは住宅会社選びのプロフェッショナルアドバイザーです。
+以下のユーザーの診断結果をもとに、パーソナライズされた
+「家づくりカルテ」を作成してください。
+
+【診断タイプ】${body.diagnosisType ?? "未診断"}
+【主な回答データ】${JSON.stringify(body.answers ?? {})}
+${correctionsText ? `【補正内容】\n${correctionsText}` : ""}
+
+以下の5つのセクションを、合計800〜1000文字で作成してください。
+${correctionsText ? "補正内容がある場合は必ず優先して反映してください。" : ""}
+
+## 1. あなたの家づくりタイプ詳細解説
+タイプ名とその特徴を詳しく説明。
+このタイプの人が家づくりで大切にすべき価値観も含める。
+
+## 2. 重視すべきポイントのアドバイス
+このタイプのユーザーが工務店選びで特に重視すべき
+具体的なポイントを3〜5つ挙げて解説する。
+
+## 3. 注意すべき落とし穴
+このタイプがやりがちな失敗・後悔しやすいポイントを
+2〜3つ具体的に挙げて警告する。
+
+## 4. 工務店選びのチェックリスト
+打ち合わせや見学時に確認すべき質問・チェック項目を
+5〜7つ箇条書きで提示する。
+
+## 5. 最後に
+資料請求した工務店の資料を読む際のアドバイスと、
+次のステップへの背中を押すメッセージ。`;
+
+  const genAI = new GoogleGenerativeAI(geminiKey);
+  const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash" });
+  const result = await model.generateContent(prompt);
+  const karteMarkdown = result.response.text();
+
+  const karteHtml = markdownToHtml(karteMarkdown);
+
+  const { Resend } = await import("resend");
+  const resend = new Resend(resendKey);
+  const from = process.env.RESEND_FROM_EMAIL ?? "noreply@iematch.jp";
+
+  const html = `
+<div style="font-family: sans-serif; color: #333; max-width: 600px; margin: 0 auto; padding: 20px;">
+  <div style="background: #2E5240; color: white; padding: 20px; border-radius: 8px; margin-bottom: 24px;">
+    <p style="margin: 0; font-size: 12px; opacity: 0.8;">イエマッチAI</p>
+    <h1 style="margin: 8px 0 0; font-size: 20px; color: white; border: none; padding: 0;">あなただけの家づくりカルテ</h1>
+    <p style="margin: 8px 0 0; font-size: 14px; opacity: 0.9;">${escapeHtml(body.name)}様・${escapeHtml(body.diagnosisType ?? "未診断")}</p>
+  </div>
+
+  ${karteHtml}
+
+  <div style="margin-top: 40px; font-size: 12px; color: #999; border-top: 1px solid #eee; padding-top: 16px;">
+    <p>このメールはイエマッチAIから自動送信されています。<br>
+    資料請求した工務店からは3営業日以内にご連絡いたします。</p>
+  </div>
+</div>`;
+
+  const sendResult = await resend.emails.send({
+    from,
+    to: body.email,
+    subject: "【イエマッチAI】あなただけの家づくりカルテをお届けします",
+    html,
+  });
+
+  if (sendResult.error) {
+    console.error("[leads] カルテメール送信エラー:", sendResult.error);
+  } else {
+    console.log("[leads] カルテメール送信成功");
+  }
+}
+
+/**
+ * GeminiのMarkdown出力をHTMLに変換する
+ */
+function markdownToHtml(md: string): string {
+  return md
+    .replace(/## (.+)/g, '<h2 style="color: #2E5240; font-size: 16px; margin-top: 24px;">$1</h2>')
+    .replace(/^- (.+)$/gm, "<li>$1</li>")
+    .replace(/((?:<li>.+<\/li>\n?)+)/g, '<ul style="line-height: 2;">$1</ul>')
+    .replace(/\*\*(.+?)\*\*/g, "<strong>$1</strong>")
+    .replace(/\n{2,}/g, "</p><p style=\"line-height: 1.8;\">")
+    .replace(/^(?!<)(.+)$/gm, '<p style="line-height: 1.8;">$1</p>')
+    .replace(/<p style="line-height: 1.8;"><\/p>/g, "");
+}
+
 function escapeHtml(str: string): string {
   return str
     .replace(/&/g, "&amp;")
@@ -229,6 +338,13 @@ export async function POST(request: Request) {
     await sendEmails(body);
   } catch (err) {
     console.error("[leads] メール送信で予期しないエラー:", err);
+  }
+
+  // カルテメール送信（失敗してもリード保存・既存メールは成功扱い）
+  try {
+    await sendKarteMail(body);
+  } catch (err) {
+    console.error("[leads] カルテメール送信で予期しないエラー:", err);
   }
 
   return NextResponse.json({ ok: true });
