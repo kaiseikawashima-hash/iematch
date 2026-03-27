@@ -280,6 +280,31 @@ export default function ResultPage() {
             </p>
           ) : null}
 
+          {/* CTAバナー */}
+          <div
+            className="mb-4 rounded-xl py-6 px-8 text-center"
+            style={{ backgroundColor: "#E8F0EB" }}
+          >
+            <p className="text-sm font-bold" style={{ color: "#2E5240" }}>
+              気になる会社は見つかりましたか？
+            </p>
+            <p className="mt-1 text-xs" style={{ color: "#2E5240" }}>
+              資料請求は無料・営業電話なし。1分で完了します。
+            </p>
+            <button
+              type="button"
+              onClick={() => {
+                document
+                  .getElementById("cta-request")
+                  ?.scrollIntoView({ behavior: "smooth" });
+              }}
+              className="mt-3 rounded-full px-8 py-3 text-sm font-bold text-white transition-colors"
+              style={{ backgroundColor: "#2E5240" }}
+            >
+              まとめて資料請求する →
+            </button>
+          </div>
+
           <div className="space-y-4">
             {recs.map((rec, index) => {
               const builder = builders.find((b) => b.id === rec.builderId);
@@ -522,7 +547,7 @@ export default function ResultPage() {
 
         {/* ⑤ まとめて資料請求 */}
         {selectedIds.size > 0 && (
-          <div className="mt-6 text-center">
+          <div id="cta-request" className="mt-6 text-center">
             <button
               type="button"
               onClick={() => {
