@@ -115,6 +115,13 @@ export default function ResultPage() {
   const [comparisonText, setComparisonText] = useState<string | null>(null);
   const [comparisonLoading, setComparisonLoading] = useState(false);
   const [showMore, setShowMore] = useState(false);
+  const [karteSubmitted, setKarteSubmitted] = useState(false);
+
+  useEffect(() => {
+    if (sessionStorage.getItem("iematch_karte_sent") === "true") {
+      setKarteSubmitted(true);
+    }
+  }, []);
 
   useEffect(() => {
     if (buildersLoading) return;
@@ -138,6 +145,10 @@ export default function ResultPage() {
 
     const diagResult = { ...diagnosisBase, recommendations };
     setResult(diagResult);
+
+    // diagnosisTypeをsessionStorageに保存（カルテメール用）
+    const typeInfo = typeDefinitions[diagResult.mainType];
+    sessionStorage.setItem("iematch_diagnosis_type", typeInfo?.label ?? diagResult.displayLabel);
 
     // 初期選択状態: 初期表示の上位5社を選択
     const sorted = [...recommendations].sort(
@@ -304,6 +315,57 @@ export default function ResultPage() {
             >
               まとめて資料請求する →
             </button>
+          </div>
+
+          {/* カルテティザーカード */}
+          <div
+            className="mb-4 overflow-hidden rounded-xl border p-6"
+            style={{ borderColor: "#2E5240" }}
+          >
+            {karteSubmitted ? (
+              <>
+                <p className="text-sm font-bold" style={{ color: "#2E5240" }}>
+                  ✅ カルテをメールで送信しました！
+                </p>
+                <p className="mt-1 text-xs text-gray-500">
+                  ご登録のメールアドレスをご確認ください
+                </p>
+              </>
+            ) : (
+              <>
+                <p className="text-sm font-bold" style={{ color: "#2E5240" }}>
+                  🔒 あなただけの家づくりカルテ
+                </p>
+                <p className="mt-1 text-xs text-gray-500">
+                  資料請求後にメールでお届けします
+                </p>
+                <div className="relative mt-4">
+                  <div
+                    className="space-y-2 text-xs text-gray-600"
+                    style={{ filter: "blur(4px)", userSelect: "none" }}
+                  >
+                    <p>1. あなたの家づくりタイプ詳細解説</p>
+                    <p>2. 重視すべきポイントのアドバイス</p>
+                    <p>3. 注意すべき落とし穴</p>
+                    <p>4. 工務店選びのチェックリスト</p>
+                    <p>5. 工務店への質問リスト</p>
+                  </div>
+                  <div className="absolute inset-0 bg-white/60" />
+                </div>
+                <button
+                  type="button"
+                  onClick={() => {
+                    document
+                      .getElementById("cta-request")
+                      ?.scrollIntoView({ behavior: "smooth" });
+                  }}
+                  className="mt-4 w-full rounded-full py-3 text-sm font-bold text-white transition-colors"
+                  style={{ backgroundColor: "#2E5240" }}
+                >
+                  資料請求してカルテを受け取る
+                </button>
+              </>
+            )}
           </div>
 
           <div className="space-y-4">

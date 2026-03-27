@@ -90,7 +90,7 @@ export default function RequestPage() {
           address: form.address,
           message: form.message,
           builderIds: form.builderIds,
-          diagnosisType: parsedAnswers.diagnosisType ?? null,
+          diagnosisType: sessionStorage.getItem("iematch_diagnosis_type") ?? null,
           answers: parsedAnswers.answers ?? null,
           corrections: parsedCorrections,
         }),
@@ -104,6 +104,7 @@ export default function RequestPage() {
       }
 
       sessionStorage.setItem("iematch_request_form", JSON.stringify(form));
+      sessionStorage.setItem("iematch_karte_sent", "true");
       router.push("/request/complete");
     } catch {
       setSubmitError("通信エラーが発生しました。もう一度お試しください。");
