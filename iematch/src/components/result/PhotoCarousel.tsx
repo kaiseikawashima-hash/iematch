@@ -11,8 +11,15 @@ interface PhotoCarouselProps {
   readonly photos: Photo[];
 }
 
+const PLACEHOLDERS: Photo[] = [
+  { url: "https://placehold.co/600x400/e8f0eb/2e5240?text=施工事例1", category: "exterior" },
+  { url: "https://placehold.co/600x400/e8f0eb/2e5240?text=施工事例2", category: "interior" },
+  { url: "https://placehold.co/600x400/e8f0eb/2e5240?text=施工事例3", category: "interior" },
+];
+
 export function PhotoCarousel({ photos }: PhotoCarouselProps) {
-  const slides = photos.filter((p) => p.url).slice(0, 3);
+  const realSlides = photos.filter((p) => p.url).slice(0, 3);
+  const slides = realSlides.length > 0 ? realSlides : PLACEHOLDERS;
   const [current, setCurrent] = useState(0);
 
   const next = useCallback(() => {
@@ -24,16 +31,6 @@ export function PhotoCarousel({ photos }: PhotoCarouselProps) {
     const timer = setInterval(next, 4000);
     return () => clearInterval(timer);
   }, [slides.length, next]);
-
-  if (slides.length === 0) {
-    return (
-      <div className="h-[200px] w-full bg-gradient-to-br from-gray-100 to-gray-200">
-        <div className="flex h-full items-center justify-center text-sm text-gray-400">
-          施工事例写真
-        </div>
-      </div>
-    );
-  }
 
   if (slides.length === 1) {
     return (
