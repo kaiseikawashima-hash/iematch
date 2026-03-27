@@ -11,6 +11,7 @@ import { Header } from "@/components/layout/Header";
 import { Footer } from "@/components/layout/Footer";
 import { RadarChart } from "@/components/result/RadarChart";
 import { TypeBadge } from "@/components/result/TypeBadge";
+import { PhotoCarousel } from "@/components/result/PhotoCarousel";
 
 type Correction = {
   afterQuestion: string;
@@ -138,13 +139,13 @@ export default function ResultPage() {
     const diagResult = { ...diagnosisBase, recommendations };
     setResult(diagResult);
 
-    // 初期選択状態: 表示対象を選択（上位10社）
+    // 初期選択状態: 初期表示の上位5社を選択
     const sorted = [...recommendations].sort(
       (a, b) => b.displayMatchRate - a.displayMatchRate
     );
     const filtered = sorted.filter((r) => r.displayMatchRate >= 40);
     const displayed = (filtered.length >= 10 ? filtered.slice(0, 10) : sorted.slice(0, 10));
-    setSelectedIds(new Set(displayed.map((r) => r.builderId)));
+    setSelectedIds(new Set(displayed.slice(0, 5).map((r) => r.builderId)));
 
     // Gemini比較セット説明文を取得
     fetchComparisonText(diagResult, userAnswers.answers);
@@ -311,39 +312,7 @@ export default function ResultPage() {
                 >
                   {/* 写真エリア */}
                   <div className="relative">
-                    <div className="flex snap-x snap-mandatory overflow-x-auto scrollbar-hide">
-                      {builder.photos.length > 0 ? (
-                        builder.photos.map((photo, i) => (
-                          <div
-                            key={i}
-                            className="h-[200px] w-full flex-none snap-center bg-gradient-to-br from-gray-100 to-gray-200"
-                          >
-                            {photo.url ? (
-                              // eslint-disable-next-line @next/next/no-img-element
-                              <img
-                                src={photo.url}
-                                alt={
-                                  photo.category === "exterior"
-                                    ? "外観写真"
-                                    : "内装写真"
-                                }
-                                className="h-full w-full object-cover"
-                              />
-                            ) : (
-                              <div className="flex h-full items-center justify-center text-sm text-gray-400">
-                                施工事例写真
-                              </div>
-                            )}
-                          </div>
-                        ))
-                      ) : (
-                        <div className="h-[200px] w-full flex-none bg-gradient-to-br from-gray-100 to-gray-200">
-                          <div className="flex h-full items-center justify-center text-sm text-gray-400">
-                            施工事例写真
-                          </div>
-                        </div>
-                      )}
-                    </div>
+                    <PhotoCarousel photos={builder.photos} />
 
                     {/* バッジ */}
                     {badgeLabel && (
@@ -438,7 +407,7 @@ export default function ResultPage() {
               style={{ background: "#EFF6FF", borderColor: "#BFDBFE" }}
             >
               <p className="text-xs leading-relaxed text-blue-800">
-                3社の資料を見比べて、ここだけは譲れないと感じるポイントを見つけてください。それがあなたの本当の判断軸です。
+                複数社の資料を見比べて、ここだけは譲れないと感じるポイントを見つけてください。それがあなたの本当の判断軸です。
               </p>
             </div>
           )}
