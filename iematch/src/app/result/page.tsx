@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState, useCallback, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import { DiagnosisResult, UserAnswers, Answer } from "@/types";
 import { runDiagnosis } from "@/lib/diagnosis";
@@ -137,8 +137,13 @@ export default function ResultPage() {
     const diagResult = { ...diagnosisBase, recommendations };
     setResult(diagResult);
 
-    // 初期選択状態: 全推薦を選択
-    setSelectedIds(new Set(recommendations.map((r) => r.builderId)));
+    // 初期選択状態: 表示対象を選択（上位10社）
+    const sorted = [...recommendations].sort(
+      (a, b) => b.displayMatchRate - a.displayMatchRate
+    );
+    const filtered = sorted.filter((r) => r.displayMatchRate >= 40);
+    const displayed = (filtered.length >= 10 ? filtered.slice(0, 10) : sorted.slice(0, 10));
+    setSelectedIds(new Set(displayed.map((r) => r.builderId)));
 
     // Gemini比較セット説明文を取得
     fetchComparisonText(diagResult, userAnswers.answers);
@@ -207,9 +212,25 @@ export default function ResultPage() {
     );
   }
 
+  const [showMore, setShowMore] = useState(false);
+
   const typeInfo = typeDefinitions[result.mainType];
-  const recs = result.recommendations;
   const reasonPoints = extractReasonPoints(answers);
+
+  // 工務店の絞り込み: マッチ度40%以上、足りなければ上位10社まで補充
+  const displayedBuilders = useMemo(() => {
+    const sorted = [...result.recommendations].sort(
+      (a, b) => b.displayMatchRate - a.displayMatchRate
+    );
+    const filtered = sorted.filter((r) => r.displayMatchRate >= 40);
+    if (filtered.length >= 10) return filtered.slice(0, 10);
+    // 40%未満でもスコア上位から最大10社確保
+    return sorted.slice(0, 10);
+  }, [result.recommendations]);
+
+  const initialBuilders = displayedBuilders.slice(0, 5);
+  const extraBuilders = displayedBuilders.slice(5);
+  const recs = showMore ? displayedBuilders : initialBuilders;
 
   return (
     <div
@@ -394,6 +415,22 @@ export default function ResultPage() {
               );
             })}
           </div>
+
+          {/* さらに見るボタン */}
+          {extraBuilders.length > 0 && (
+            <div className="mt-4 text-center">
+              <button
+                type="button"
+                onClick={() => setShowMore((prev) => !prev)}
+                className="inline-flex items-center gap-1.5 rounded-full border px-6 py-2.5 text-sm font-medium transition-colors hover:bg-white"
+                style={{ borderColor: "#2E5240", color: "#2E5240" }}
+              >
+                {showMore
+                  ? "閉じる \u2227"
+                  : `さらに${extraBuilders.length}社を見る \u2228`}
+              </button>
+            </div>
+          )}
 
           {/* 比較ヒント */}
           {recs.length >= 3 && (
