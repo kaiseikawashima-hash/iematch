@@ -223,8 +223,7 @@ function ImagesTab() {
   const [urls, setUrls] = useState<Record<string, string>>({});
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
-  const [uploading, setUploading] = useState<Record<string, boolean>>({});
-  const [toast, setToast] = useState<string | null>(null);
+  const [saveError, setSaveError] = useState<string | null>(null);
 
   useEffect(() => {
     (async () => {
@@ -242,65 +241,32 @@ function ImagesTab() {
     })();
   }, []);
 
-  const showToast = (message: string) => {
-    setToast(message);
-    setTimeout(() => setToast(null), 2500);
-  };
-
-  const handleUpload = async (imageId: string, file: File) => {
-    setUploading((prev) => ({ ...prev, [imageId]: true }));
-    try {
-      const formData = new FormData();
-      formData.append("file", file);
-      formData.append("id", imageId);
-
-      const res = await fetch("/api/admin/upload-image", {
-        method: "POST",
-        body: formData,
-      });
-      const data = await res.json();
-
-      if (!res.ok) {
-        showToast(data.error ?? "アップロードに失敗しました");
-        return;
-      }
-
-      // URLを更新（ブラウザキャッシュ回避のためタイムスタンプ付与）
-      const newUrl = `${data.path}?t=${Date.now()}`;
-      setUrls((prev) => ({ ...prev, [imageId]: newUrl }));
-
-      // Supabaseにも保存
-      await fetch("/api/admin/images", {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          images: [{ id: imageId, url: data.path }],
-        }),
-      });
-
-      showToast("保存しました");
-    } catch {
-      showToast("アップロードに失敗しました");
-    } finally {
-      setUploading((prev) => ({ ...prev, [imageId]: false }));
-    }
-  };
-
   const handleSave = async () => {
     setSaving(true);
     setSaved(false);
+    setSaveError(null);
     const images = TASTE_IMAGES.map((img) => ({
       id: img.id,
-      url: (urls[img.id] ?? "").split("?")[0], // キャッシュバスター除去
+      url: urls[img.id] ?? "",
     }));
-    await fetch("/api/admin/images", {
-      method: "PUT",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ images }),
-    });
-    setSaving(false);
-    setSaved(true);
-    setTimeout(() => setSaved(false), 2000);
+    try {
+      const res = await fetch("/api/admin/images", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ images }),
+      });
+      if (!res.ok) {
+        const data = await res.json();
+        setSaveError(data.error ?? "保存に失敗しました");
+      } else {
+        setSaved(true);
+        setTimeout(() => setSaved(false), 2000);
+      }
+    } catch {
+      setSaveError("保存に失敗しました");
+    } finally {
+      setSaving(false);
+    }
   };
 
   const groups = ["外観", "内装"];
@@ -308,13 +274,7 @@ function ImagesTab() {
   return (
     <div className="rounded-2xl bg-white p-5 shadow-sm">
       <h2 className="text-sm font-bold" style={{ color: BRAND }}>テイスト画像管理</h2>
-      <p className="mt-1 text-[10px] text-gray-400">Q13・Q14で表示される画像のURLを管理します</p>
-
-      <div className="mt-3 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2">
-        <p className="text-[10px] leading-relaxed text-amber-700">
-          画像のアップロードはローカル環境でのみ有効です。アップロード後はgit pushで本番に反映してください。
-        </p>
-      </div>
+      <p className="mt-1 text-[10px] text-gray-400">Q13・Q14で表示される画像のURLを管理します（Supabaseに保存）</p>
 
       {groups.map((group) => (
         <div key={group} className="mt-4">
@@ -339,23 +299,6 @@ function ImagesTab() {
                     placeholder="https://images.unsplash.com/..."
                     className="mt-1 w-full rounded-lg border border-black/10 px-3 py-2 text-[11px] outline-none focus:border-brand focus:ring-1 focus:ring-brand"
                   />
-                  <label
-                    className={`mt-1 inline-flex cursor-pointer items-center gap-1 rounded-lg border border-black/10 px-3 py-1.5 text-[10px] font-medium text-gray-600 transition-colors hover:bg-gray-50 ${
-                      uploading[img.id] ? "pointer-events-none opacity-50" : ""
-                    }`}
-                  >
-                    <input
-                      type="file"
-                      accept="image/*"
-                      className="hidden"
-                      onChange={(e) => {
-                        const file = e.target.files?.[0];
-                        if (file) handleUpload(img.id, file);
-                        e.target.value = "";
-                      }}
-                    />
-                    {uploading[img.id] ? "アップロード中..." : "ファイルを選択"}
-                  </label>
                 </div>
               </div>
             ))}
@@ -371,16 +314,11 @@ function ImagesTab() {
           className="rounded-full px-6 py-2 text-sm font-bold text-white disabled:opacity-60"
           style={{ background: BRAND }}
         >
-          {saving ? "保存中..." : "URL一括保存"}
+          {saving ? "保存中..." : "保存"}
         </button>
         {saved && <span className="text-xs text-green-600">保存しました</span>}
+        {saveError && <span className="text-xs text-red-500">{saveError}</span>}
       </div>
-
-      {toast && (
-        <div className="fixed bottom-6 left-1/2 z-50 -translate-x-1/2 rounded-full bg-gray-800 px-5 py-2.5 text-xs font-medium text-white shadow-lg">
-          {toast}
-        </div>
-      )}
     </div>
   );
 }
