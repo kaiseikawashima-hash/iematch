@@ -1,7 +1,6 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import Image from "next/image";
 import { Header } from "@/components/layout/Header";
 import { Footer } from "@/components/layout/Footer";
 
@@ -36,16 +35,23 @@ export default function AichiPage() {
       </section>
 
       {/* 愛知エリア地図 */}
-      <div className="text-center" style={{ margin: "24px 0" }}>
-        <Image
-          src="https://upload.wikimedia.org/wikipedia/commons/thumb/1/18/Aichi_in_Japan.svg/400px-Aichi_in_Japan.svg.png"
-          alt="愛知県エリア"
-          width={200}
-          height={200}
-          style={{ opacity: 0.8, margin: "0 auto" }}
-          unoptimized
-        />
-        <p style={{ color: "#2E5240", fontSize: "14px", marginTop: "8px" }}>対応エリア：愛知県全域</p>
+      <div style={{textAlign: 'center', margin: '24px 0'}}>
+        <svg
+          viewBox="0 0 200 180"
+          width="200"
+          height="180"
+          xmlns="http://www.w3.org/2000/svg"
+        >
+          {/* 愛知県の簡易シルエット（多角形で近似） */}
+          <polygon
+            points="60,10 140,10 170,40 175,80 160,120 130,150 100,160 70,150 40,120 25,80 30,40"
+            fill="#E8F0EB"
+            stroke="#2E5240"
+            strokeWidth="2"
+          />
+          <text x="100" y="90" textAnchor="middle" fill="#2E5240" fontSize="14" fontWeight="bold">愛知県</text>
+        </svg>
+        <p style={{color: '#2E5240', fontSize: '14px', marginTop: '8px'}}>対応エリア：愛知県全域</p>
       </div>
 
       {/* 課題訴求セクション */}
