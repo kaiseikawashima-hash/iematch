@@ -9,18 +9,20 @@ type Tab = "builders" | "images" | "policy" | "leads";
 
 // テイスト画像定義
 const TASTE_IMAGES = [
-  { id: "ext_simple_modern", group: "外観", label: "シンプルモダン" },
-  { id: "ext_natural_nordic", group: "外観", label: "ナチュラル・北欧風" },
-  { id: "ext_japanese_modern", group: "外観", label: "和モダン" },
   { id: "ext_industrial", group: "外観", label: "インダストリアル" },
-  { id: "ext_resort", group: "外観", label: "リゾート・南欧風" },
-  { id: "ext_hiraya", group: "外観", label: "平屋スタイル" },
-  { id: "int_white_clean", group: "内装", label: "白基調シンプル&クリーン" },
-  { id: "int_natural_wood", group: "内装", label: "無垢材ナチュラル" },
-  { id: "int_monotone", group: "内装", label: "モノトーン" },
-  { id: "int_cafe_vintage", group: "内装", label: "カフェ風・ヴィンテージ" },
+  { id: "ext_japanese", group: "外観", label: "和テイスト" },
+  { id: "ext_luxury", group: "外観", label: "ラグジュアリー" },
+  { id: "ext_modern", group: "外観", label: "モダン" },
+  { id: "ext_natural", group: "外観", label: "ナチュラル" },
+  { id: "ext_simple", group: "外観", label: "シンプル" },
+  { id: "ext_other", group: "外観", label: "その他" },
+  { id: "int_industrial", group: "内装", label: "インダストリアル" },
   { id: "int_japanese", group: "内装", label: "和テイスト" },
-  { id: "int_colorful", group: "内装", label: "カラフル・個性的" },
+  { id: "int_luxury", group: "内装", label: "ラグジュアリー" },
+  { id: "int_modern", group: "内装", label: "モダン" },
+  { id: "int_natural", group: "内装", label: "ナチュラル" },
+  { id: "int_simple", group: "内装", label: "シンプル" },
+  { id: "int_other", group: "内装", label: "その他" },
 ];
 
 export default function AdminPage() {

@@ -12,28 +12,28 @@ const PRICE_RANGES = [
 ] as const;
 
 const EXTERIOR_STYLES = [
-  { value: "simple_modern", label: "シンプルモダン" },
-  { value: "natural_nordic", label: "ナチュラル・北欧風" },
-  { value: "japanese_modern", label: "和モダン" },
-  { value: "industrial", label: "インダストリアル・ブルックリン" },
-  { value: "resort", label: "リゾート・南欧風" },
-  { value: "hiraya", label: "平屋スタイル" },
-  { value: "none", label: "その他・こだわりなし" },
+  { value: "industrial", label: "インダストリアル" },
+  { value: "japanese", label: "和テイスト" },
+  { value: "luxury", label: "ラグジュアリー" },
+  { value: "modern", label: "モダン" },
+  { value: "natural", label: "ナチュラル" },
+  { value: "simple", label: "シンプル" },
+  { value: "other", label: "その他" },
 ] as const;
 
 const INTERIOR_STYLES = [
-  { value: "white_clean", label: "白基調シンプル&クリーン" },
-  { value: "natural_wood", label: "無垢材ナチュラル" },
-  { value: "monotone", label: "モノトーン・スタイリッシュ" },
-  { value: "cafe_vintage", label: "カフェ風・ヴィンテージ" },
+  { value: "industrial", label: "インダストリアル" },
   { value: "japanese", label: "和テイスト" },
-  { value: "colorful", label: "カラフル・個性的" },
-  { value: "none", label: "その他・こだわりなし" },
+  { value: "luxury", label: "ラグジュアリー" },
+  { value: "modern", label: "モダン" },
+  { value: "natural", label: "ナチュラル" },
+  { value: "simple", label: "シンプル" },
+  { value: "other", label: "その他" },
 ] as const;
 
 const ALL_STYLES = [
-  ...EXTERIOR_STYLES.map((s) => (s.value === "none" ? { ...s, key: "exterior_none" } : s)),
-  ...INTERIOR_STYLES.map((s) => (s.value === "none" ? { ...s, key: "interior_none" } : s)),
+  ...EXTERIOR_STYLES.map((s) => ({ ...s, key: `exterior_${s.value}` })),
+  ...INTERIOR_STYLES.map((s) => ({ ...s, key: `interior_${s.value}` })),
 ];
 
 const PERFORMANCE_OPTIONS = [
@@ -61,7 +61,7 @@ const SERVICE_OPTIONS = [
   { value: "renovation", label: "リフォーム・リノベーション対応" },
   { value: "shop_house", label: "店舗併用住宅対応" },
   { value: "pet_design", label: "ペット対応住宅実績あり" },
-  { value: "hiraya", label: "平屋の実績あり" },
+  { value: "simple_house", label: "平屋の実績あり" },
 ] as const;
 
 const DESIGN_FREEDOM_OPTIONS = [

@@ -83,20 +83,13 @@ export function filterBuilders(answers: Answer[], builders: Builder[]): Builder[
  * 画像タグ → 工務店スタイル値へのマッピング（1:1対応）
  */
 const TAG_TO_BUILDER_STYLES: Record<string, string[]> = {
-  // exterior
-  simple_modern: ["simple_modern"],
-  natural: ["natural"],
-  japanese: ["japanese"],
   industrial: ["industrial"],
-  resort: ["resort"],
-  hiraya: ["hiraya"],
+  japanese: ["japanese"],
+  luxury: ["luxury"],
+  modern: ["modern"],
+  natural: ["natural"],
+  simple: ["simple"],
   other: ["other"],
-  // interior
-  simple_clean: ["simple_clean"],
-  natural_wood: ["natural_wood"],
-  monotone: ["monotone"],
-  cafe_vintage: ["cafe_vintage"],
-  colorful: ["colorful"],
 };
 
 function builderHasTag(builderStyles: string[], tag: string): boolean {
@@ -312,12 +305,12 @@ function generateReasonText(answers: Answer[], builder: Builder): string {
   };
 
   const styleTagLabels: Record<string, string> = {
-    simple_modern: "シンプルモダン",
-    natural: "ナチュラル",
-    japanese: "和テイスト",
     industrial: "インダストリアル",
-    resort: "リゾート",
-    hiraya: "平屋",
+    japanese: "和テイスト",
+    luxury: "ラグジュアリー",
+    modern: "モダン",
+    natural: "ナチュラル",
+    simple: "シンプル",
   };
 
   const parts: string[] = [];
