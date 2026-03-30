@@ -1,7 +1,7 @@
 # イエマッチAI 開発TODOリスト
 
 **作成日**: 2026-03-18
-**最終更新**: 2026-03-30
+**最終更新**: 2026-03-30（Phase 11.22まで完了）
 
 ---
 
@@ -520,6 +520,170 @@
     - ALTER TABLE builders ADD COLUMN founded_year integer;
     - ALTER TABLE builders ADD COLUMN annual_builds integer;
 
+## Phase 11.18: 全ページデザイン統一（ミント系カラーパレット）
+
+- [x] 11.18-1. globals.css カラー変数をミント系に統一
+  - メイン: #2E5240 → #2ABFA4 / ダーク: #1D9980 / ディープ: #167A66
+  - オレンジ: #FF9F43 / 背景: #FEFCF9 / テキスト: #1A2B2E / サブ: #4A5C5E
+  - 見出しフォント h1〜h6 に Zen Maru Gothic を適用
+- [x] 11.18-2. Header / Footer をミント系に統一
+  - Header: ミント背景・白テキスト・AIバッジ白
+  - Footer: ミントロゴ・#4A5C5Eサブテキスト
+- [x] 11.18-3. トップLP（page.tsx）デザイン刷新
+  - ヒーロー: ミントグラデーション（#2ABFA4→#167A66）
+  - CTA: オレンジ(#FF9F43)・rounded-full
+  - お悩みカード: ミントボーダー
+  - ステップ: ミント丸バッジ
+  - 選ばれる理由・FAQ: ミント系カード
+  - スクロール追従CTA（スティッキーフッター）
+- [x] 11.18-4. 愛知LP（aichi/page.tsx）をトップと同デザインに統一
+  - コピーは愛知専用のまま維持、デザインのみトップと統一
+- [x] 11.18-5. 診断ページ（diagnosis/page.tsx）のミント系統一
+  - 背景: #F5F4F0 → #FEFCF9
+  - InsightCard: 背景#E8FBF6・ボーダー#2ABFA4・ボタン#2ABFA4
+- [x] 11.18-6. ローディング画面のミント系統一
+  - スピナー: #2ABFA4 / テキスト: Zen Maru Gothic・#1A2B2E / サブ: #4A5C5E
+
+## Phase 11.19: Q13・Q14画像選択UI化・タグベーススコアリング
+
+- [x] 11.19-1. styleImages.tsデータファイル新規作成
+  - 6タグ（natural/modern/simple/japanese/industrial/luxury）× 2枚 × 2カテゴリ
+  - countTags()関数: 選択画像IDからタグ出現回数を集計
+  - getTagFromImageId()関数: 画像ID→タグ逆引き
+- [x] 11.19-2. QuestionOption型にtag追加・Q13/Q14を12枚画像に変更
+  - types/index.ts: tag?: string 追加
+  - questions.ts: Q13(外観12枚)・Q14(内装12枚)をstyleImagesから動的生成
+  - minSelect: 1, maxSelect: 4
+- [x] 11.19-3. ImageSelectCard UIリニューアル
+  - 2列グリッド（grid-cols-2）・正方形（aspect-ratio: 1）
+  - 選択カウンター（N/4 選択中）
+  - 選択済み: ミントオーバーレイ + 右上チェックバッジ
+  - 上限4枚到達で未選択画像をグレーアウト
+- [x] 11.19-4. タグベーススコアリング導入
+  - matching.ts: TAG_TO_BUILDER_STYLES マッピング追加（新タグ→旧スタイル値）
+  - calcExteriorScore: タグカウント × bestStyle一致5点 / exteriorStyles一致3点
+  - calcInteriorScore: タグカウント × interiorStyles一致3点
+  - ボーナス・理由テキスト生成もタグベースに変更
+- [x] 11.19-5. diagnosis.ts Q13/Q14のタイプ診断をタグ多様性ベースに変更
+  - ユニークタグ数1-2 → designFirst高加点 / 3以上 → totalBalance加点
+- [x] 11.19-6. getImages.tsのIDマッピングを新画像ID体系に更新
+
+## Phase 11.20: 画像選択UI改善・実画像差し替え
+
+- [x] 11.20-1. 画像タグラベル非表示化
+  - ImageSelectCard: 下部のラベルオーバーレイ削除、画像のみ表示
+- [x] 11.20-2. 画像表示順ランダム化
+  - diagnosis/page.tsx: Fisher-Yatesシャッフルで初回レンダリング時にQ13/Q14画像順をランダム化
+  - Supabase画像上書き時もシャッフル済み順序を維持
+- [x] 11.20-3. 外観画像素材を実素材に差し替え
+  - public/images/styles/exterior_*.jpg 12枚追加
+- [x] 11.20-4. 内装画像素材を実素材に差し替え
+  - public/images/styles/interior_*.jpg 12枚追加
+- [x] 11.20-5. 画像URLをローカルパスに修正
+  - questions.ts: img.fallback（Unsplash URL）→ img.src（ローカルパス）に変更
+
+## Phase 11.21: 診断フロー設問全面リニューアル
+
+- [x] 11.21-1. カテゴリ構成の変更（7カテゴリ→6カテゴリ）
+  - Cat1: 現在の状況（Q1-Q3）
+  - Cat2: 予算・資金計画（Q4-Q9）※エリア・土地・予算・ローンを統合
+  - Cat3: 暮らし方（Q10-Q12）
+  - Cat4: デザインの好み（Q13-Q14）
+  - Cat5: 住宅性能（Q15-Q16）
+  - Cat6: 会社選びの基準（Q17-Q19）
+- [x] 11.21-2. Q1-Q3の設問変更
+  - Q1: 検討段階5択→検討状況3択（active/researching/casual）
+  - Q2: 入居希望時期→現在の住まい（rental/owned/family_home）
+  - Q3: 検討社数→家づくりのきっかけ（multi選択: child/marriage/dissatisfaction/rent_waste/peers/other）
+- [x] 11.21-3. Q4-Q9の設問変更（予算・エリア・土地を統合）
+  - Q4: エリア選択（旧Q7から移動、type: area、複数選択）
+  - Q5: 建築希望時期（旧Q2を移動・選択肢変更: within_1y/1_to_2y/2_to_3y/over_3y/undecided）
+  - Q6: 土地状況（旧Q8を移動、「土地がある」選択時にテキスト入力サブフィールド追加）
+  - Q9: 土地サポート（Q6の②③選択時のみ表示、選択肢変更: yes_please/info_wanted/self_manage）
+  - Q7: 予算（旧Q4を移動、Q6の回答に応じて質問文・選択肢が動的切替）
+    - 土地あり: 「建物のみの総予算」8択（under_2000〜over_6500）
+    - 土地なし: 「住宅の総予算（土地+建築）」8択（under_4000〜over_10000）
+    - Question型にvariants追加で実現
+  - Q8: ローン検討状況（選択肢変更: pre_approved/planning/cash）
+- [x] 11.21-4. Q10の家族構成将来計画選択肢変更
+  - same/more_children/with_parents → increase/no_plan/undecided
+- [x] 11.21-5. Q11の大幅拡充（8選択肢→30選択肢・最大5つ）
+  - 暮らし方の選択肢を30項目に拡張（家族/仕事/趣味/安全/快適さ/インテリア等）
+  - 診断スコアリングをデータ駆動方式（Q11_SCORESマッピング）に変更
+- [x] 11.21-6. Q12の全面書き換え（8選択肢→37選択肢）
+  - 「現在の不満」→「間取りや設備のこだわり」に変更
+  - 9カテゴリ37項目（LDK/キッチン/水まわり/寝室/仕事/収納/外まわり/設備/バリアフリー）
+  - 診断スコアリングをデータ駆動方式（Q12_SCORESマッピング）に変更
+- [x] 11.21-7. Q13/Q14の画像タグ体系変更（12枚→14枚）
+  - 外観: natural/modern/simple/japanese/industrial/luxury → simple_modern/natural/japanese/industrial/resort/hiraya/other（各2枚×7種=14枚）
+  - 内装: natural/modern/simple/japanese/industrial/luxury → simple_clean/natural_wood/monotone/cafe_vintage/japanese/colorful/other（各2枚×7種=14枚）
+  - styleImages.ts全面書き換え（StyleTag型・tagLabels・countTags対応）
+- [x] 11.21-8. Q17の選択肢変更
+  - custom_design（自由設計）→ lifestyle（暮らし提案力・ライフスタイル提案）に変更
+- [x] 11.21-9. Q18の選択肢変更
+  - 6択→4択（trust/budget_over/design_fit/process_unknown）
+- [x] 11.21-10. 工務店30社のスタイルタグ一括更新
+  - exterior: natural_nordic→natural, japanese_modern→japanese
+  - interior: white_clean→simple_clean
+  - b7_topStrengths: custom_design→lifestyle
+- [x] 11.21-11. マッチングロジック更新（matching.ts）
+  - エリアフィルタ: Q7→Q4に変更
+  - 予算フィルタ: Q4→Q7に変更、Q6の土地状況に応じたマッピング追加
+    - BUILDING_BUDGET_TO_RANGES: 建物予算→旧価格帯マッピング
+    - TOTAL_BUDGET_TO_RANGES: 総予算→旧価格帯マッピング（土地代差し引き推定）
+  - TAG_TO_BUILDER_STYLES: 新タグ体系の1:1マッピングに簡素化
+  - 土地サポート: Q8→Q6に変更、info_wanted対応追加
+  - ライフスタイルサービス: hobby_room→entertainment/diy対応
+  - おすすめ理由テキスト: strengthLabels にlifestyle追加、styleTagLabels を新タグ対応
+- [x] 11.21-12. 診断スコアリング更新（diagnosis.ts）
+  - Q11: switch/case→データ駆動方式（Q11_SCORES: 30項目のタイプスコアマッピング）
+  - Q12: switch/case→データ駆動方式（Q12_SCORES: 37項目のタイプスコアマッピング）
+  - Q17: custom_design→lifestyle（加点ロジックは同構造を維持）
+  - Q18: money/company_choice/process/image/schedule→trust/budget_over/design_fit/process_unknown
+- [x] 11.21-13. Gemini介入タイミング変更
+  - 旧: Q6回答後 / Q14回答後 / Q19回答後
+  - 新: Q8回答後 / Q14回答後 / Q19回答後
+  - INSIGHT_TRIGGER_IDS: Q6→Q8
+  - PREFETCH_MAP: Q5→Q6, Q13→Q14, Q18→Q19 → Q7→Q8, Q13→Q14, Q18→Q19
+- [x] 11.21-14. 診断画面UIの更新（diagnosis/page.tsx）
+  - variants解決ロジック追加（resolveQuestion関数: Q7の動的テキスト/オプション切替）
+  - テキスト入力サブフィールド追加（Q6で「土地がある」選択時にプレースホルダー付きinput表示）
+  - totalCategories: 7→6
+  - landLocationText state追加
+- [x] 11.21-15. 関連ファイルの整合性更新
+  - types/index.ts: QuestionOptionにtextInputPlaceholder/textInputLabel追加、Questionにvariants追加
+  - api/leads/route.ts: 予算/エリアの質問ID参照修正（Q4↔Q7入れ替え）
+  - test-diagnosis.ts: 全テストケースを新設問ID・新画像ID・新選択肢値に更新
+
+## Phase 11.22: スタイルタグ統一・画像選択UI改善・選択制限撤廃
+
+- [x] 11.22-1. スタイルタグを7種類に統一（外観・内装共通化）
+  - 旧: 外観7種(simple_modern/natural/japanese/industrial/resort/hiraya/other) + 内装7種(simple_clean/natural_wood/monotone/cafe_vintage/japanese/colorful/other)
+  - 新: 共通7種(industrial/japanese/luxury/modern/natural/simple/other)
+  - タグ変換: simple_modern→modern, resort→luxury, hiraya→simple, simple_clean→simple, natural_wood→natural, monotone→modern, cafe_vintage→industrial, colorful→luxury
+- [x] 11.22-2. styleImages.ts全面書き換え
+  - ExteriorStyleTag/InteriorStyleTag を廃止 → 統一StyleTag型
+  - 外観14枚・内装14枚（各タグ2枚×7種）
+  - tagLabels を統一7タグに更新
+- [x] 11.22-3. builders.ts全30社のスタイルタグ更新
+  - b3_exteriorStyles / b3_interiorStyles / b3_bestStyle を新タグに一括変換
+- [x] 11.22-4. matching.ts のマッピング更新
+  - TAG_TO_BUILDER_STYLES: 旧13種→新7種の1:1マッピングに簡素化
+  - styleTagLabels: 新タグ対応（ラグジュアリー・モダン・シンプル追加）
+- [x] 11.22-5. admin画面の選択肢更新
+  - admin/page.tsx: TASTE_IMAGES を新7タグ×外観/内装（計14エントリ）に変更
+  - admin/register/page.tsx: EXTERIOR_STYLES / INTERIOR_STYLES を統一7タグに変更
+  - ALL_STYLES のnone→other対応修正（TS型エラー解消）
+- [x] 11.22-6. テストデータの画像ID更新（test-diagnosis.ts）
+  - 全4ケースのQ13/Q14画像IDを新体系に変更
+- [x] 11.22-7. Q13/Q14の「その他」画像をテキストリンク化
+  - ImageSelectCard: tag='other'の画像をグリッドから除外
+  - グリッド下部に「その他・こだわりなし」テキストリンクを追加
+  - 選択時はミントカラー(#2ABFA4)に変化、other_1のIDでスコアリングに反映
+- [x] 11.22-8. Q11の選択数制限撤廃
+  - maxSelect: 5 を削除（何個でも選択可能に）
+  - subText: 「最大5つまで選択できます」→「あてはまるものをすべて選んでください」
+
 ## Phase 12: 仕上げ（未着手）
 
 - [ ] 12-1. レスポンシブ対応（375px〜スマホ優先）
@@ -555,3 +719,8 @@
 | 2026-03-28 | Phase 11.15 愛知県専用ランディングページ（/aichi）新規作成・SVG地図・中央寄せ修正 |
 | 2026-03-30 | Phase 11.16 診断結果ページ全面リニューアル（デザインHTML準拠・ミント系カラー・インラインフォーム・スティッキーCTA） |
 | 2026-03-30 | Phase 11.17 工務店データ拡充（foundedYear追加）・画像3枚スライダー・Admin創業年入力欄 |
+| 2026-03-30 | Phase 11.18 全ページデザイン統一（ミント系カラーパレット・Zen Maru Gothic・オレンジCTA） |
+| 2026-03-30 | Phase 11.19 Q13・Q14画像選択UI化（12枚×2列グリッド・タグベーススコアリング導入） |
+| 2026-03-30 | Phase 11.20 画像選択UI改善（ラベル非表示・ランダム順）・外観/内装の実画像24枚差し替え |
+| 2026-03-30 | Phase 11.21 診断フロー設問全面リニューアル（Q1-Q19新仕様・画像タグ新体系・動的予算切替・データ駆動スコアリング） |
+| 2026-03-30 | Phase 11.22 スタイルタグ統一（外観/内装共通7種）・Q13/Q14 other画像テキストリンク化・Q11選択数制限撤廃 |
