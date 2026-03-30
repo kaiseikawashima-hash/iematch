@@ -128,6 +128,7 @@ type FormData = {
   services: string[];
   designFreedom: string;
   annualBuilds: string;
+  foundedYear: string;
   // B6. 接客
   contactStyles: string[];
   salesFeatures: string[];
@@ -161,6 +162,7 @@ const initialForm: FormData = {
   services: [],
   designFreedom: "",
   annualBuilds: "",
+  foundedYear: "",
   contactStyles: [],
   salesFeatures: [],
   topStrengths: ["", "", ""],
@@ -267,6 +269,10 @@ export default function AdminRegisterPage() {
           services: form.services,
           designFreedom: form.designFreedom,
           annualBuilds: form.annualBuilds ? parseInt(form.annualBuilds, 10) : null,
+          foundedYear: form.foundedYear ? parseInt(form.foundedYear, 10) : null,
+          // Supabase migration (後日実行):
+          // ALTER TABLE builders ADD COLUMN founded_year integer;
+          // ALTER TABLE builders ADD COLUMN annual_builds integer;
           contactStyles: form.contactStyles,
           salesFeatures: form.salesFeatures,
           topStrengths: form.topStrengths.filter(Boolean),
@@ -465,6 +471,7 @@ export default function AdminRegisterPage() {
             onChange={(v) => updateText("designFreedom", v)}
           />
           <TextField label="年間施工棟数" value={form.annualBuilds} onChange={(v) => updateText("annualBuilds", v)} placeholder="30" type="number" />
+          <TextField label="創業年" value={form.foundedYear} onChange={(v) => updateText("foundedYear", v)} placeholder="2005" type="number" />
         </Section>
 
         {/* ── B6. 接客スタイル・営業 ── */}

@@ -544,15 +544,14 @@ export default function ResultPage() {
 
           const isSelected = selectedIds.has(rec.builderId);
           const stars = matchRateToStars(rec.displayMatchRate);
-          const gradientIdx = index % photoGradients.length;
-          const firstPhoto =
-            builder.photos && builder.photos.length > 0
-              ? builder.photos[0].url
-              : null;
           const firstReview =
             builder.reviews && builder.reviews.length > 0
               ? builder.reviews[0]
               : null;
+          const currentYear = new Date().getFullYear();
+          const yearsInBusiness = builder.foundedYear
+            ? currentYear - builder.foundedYear
+            : null;
 
           return (
             <div
@@ -568,61 +567,13 @@ export default function ResultPage() {
                 animation: `fadeUp 0.5s ${0.1 * (index + 1)}s ease both`,
               }}
             >
-              {/* Photo area */}
-              <div
-                style={{
-                  width: "100%",
-                  height: 180,
-                  position: "relative",
-                  overflow: "hidden",
-                }}
-              >
-                {firstPhoto ? (
-                  <img
-                    src={firstPhoto}
-                    alt={`${builder.name}の施工事例`}
-                    style={{
-                      width: "100%",
-                      height: "100%",
-                      objectFit: "cover",
-                      display: "block",
-                    }}
-                  />
-                ) : (
-                  <div
-                    style={{
-                      width: "100%",
-                      height: "100%",
-                      background: photoGradients[gradientIdx],
-                      display: "flex",
-                      alignItems: "center",
-                      justifyContent: "center",
-                      fontSize: 11,
-                      color: "rgba(255,255,255,0.5)",
-                      fontWeight: 600,
-                      letterSpacing: 1,
-                    }}
-                  >
-                    施工事例イメージ
-                  </div>
-                )}
-                <span
-                  style={{
-                    position: "absolute",
-                    top: 12,
-                    left: 12,
-                    background: "rgba(26,43,46,0.7)",
-                    backdropFilter: "blur(10px)",
-                    color: "white",
-                    fontSize: 11,
-                    fontWeight: 700,
-                    padding: "5px 12px",
-                    borderRadius: 8,
-                  }}
-                >
-                  {index + 1}位
-                </span>
-              </div>
+              {/* Photo slider */}
+              <PhotoSlider
+                photos={builder.photos}
+                builderName={builder.name}
+                rank={index + 1}
+                cardIndex={index}
+              />
 
               {/* Body */}
               <div style={{ padding: "18px 20px 20px" }}>
@@ -769,6 +720,22 @@ export default function ResultPage() {
                       🏠 施工実績{" "}
                       <b style={{ color: "#4A5C5E", fontWeight: 700 }}>
                         年間{builder.b5_annualBuilds}棟
+                      </b>
+                    </span>
+                  )}
+                  {yearsInBusiness != null && yearsInBusiness > 0 && (
+                    <span
+                      style={{
+                        fontSize: 11,
+                        color: "#8A9A9C",
+                        display: "flex",
+                        alignItems: "center",
+                        gap: 3,
+                      }}
+                    >
+                      📅 創業{" "}
+                      <b style={{ color: "#4A5C5E", fontWeight: 700 }}>
+                        {yearsInBusiness}年
                       </b>
                     </span>
                   )}
@@ -1377,6 +1344,159 @@ export default function ResultPage() {
           50% { transform: translateY(6px); opacity: 1; }
         }
       `}</style>
+    </div>
+  );
+}
+
+/** ===== PHOTO SLIDER ===== */
+const placeholderGradients = [
+  "linear-gradient(135deg,#a8e6cf,#88d8b0)",
+  "linear-gradient(135deg,#a8d8ea,#82c4d6)",
+  "linear-gradient(135deg,#ffd3b6,#ffaaa5)",
+];
+
+function PhotoSlider({
+  photos,
+  builderName,
+  rank,
+  cardIndex,
+}: {
+  photos: { url: string; tags: string[]; category: string }[];
+  builderName: string;
+  rank: number;
+  cardIndex: number;
+}) {
+  const [current, setCurrent] = useState(0);
+
+  // Build 3 slides: real photos or placeholders
+  const slides = useMemo(() => {
+    const realPhotos = photos.filter((p) => p.url);
+    if (realPhotos.length >= 3) {
+      return realPhotos.slice(0, 3).map((p) => ({ type: "image" as const, url: p.url }));
+    }
+    // Fill with placeholders
+    const result: { type: "image" | "placeholder"; url: string; gradient?: string }[] = [];
+    for (let i = 0; i < 3; i++) {
+      if (i < realPhotos.length) {
+        result.push({ type: "image", url: realPhotos[i].url });
+      } else {
+        result.push({
+          type: "placeholder",
+          url: "",
+          gradient: placeholderGradients[(cardIndex + i) % placeholderGradients.length],
+        });
+      }
+    }
+    return result;
+  }, [photos, cardIndex]);
+
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setCurrent((prev) => (prev + 1) % 3);
+    }, 4000);
+    return () => clearInterval(timer);
+  }, []);
+
+  return (
+    <div
+      style={{
+        width: "100%",
+        height: 180,
+        position: "relative",
+        overflow: "hidden",
+      }}
+    >
+      <div
+        style={{
+          display: "flex",
+          width: "300%",
+          height: "100%",
+          transform: `translateX(-${current * 33.333}%)`,
+          transition: "transform 0.8s ease-in-out",
+        }}
+      >
+        {slides.map((slide, i) => (
+          <div key={i} style={{ width: "33.333%", height: "100%", flexShrink: 0 }}>
+            {slide.type === "image" ? (
+              <img
+                src={slide.url}
+                alt={`${builderName}の施工事例 ${i + 1}`}
+                style={{
+                  width: "100%",
+                  height: "100%",
+                  objectFit: "cover",
+                  display: "block",
+                }}
+              />
+            ) : (
+              <div
+                style={{
+                  width: "100%",
+                  height: "100%",
+                  background: slide.gradient,
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  fontSize: 11,
+                  color: "rgba(255,255,255,0.5)",
+                  fontWeight: 600,
+                  letterSpacing: 1,
+                }}
+              >
+                施工事例イメージ
+              </div>
+            )}
+          </div>
+        ))}
+      </div>
+      {/* Rank badge */}
+      <span
+        style={{
+          position: "absolute",
+          top: 12,
+          left: 12,
+          background: "rgba(26,43,46,0.7)",
+          backdropFilter: "blur(10px)",
+          color: "white",
+          fontSize: 11,
+          fontWeight: 700,
+          padding: "5px 12px",
+          borderRadius: 8,
+          zIndex: 2,
+        }}
+      >
+        {rank}位
+      </span>
+      {/* Dot indicators */}
+      <div
+        style={{
+          position: "absolute",
+          bottom: 10,
+          left: "50%",
+          transform: "translateX(-50%)",
+          display: "flex",
+          gap: 6,
+          zIndex: 2,
+        }}
+      >
+        {[0, 1, 2].map((i) => (
+          <button
+            key={i}
+            type="button"
+            onClick={() => setCurrent(i)}
+            style={{
+              width: current === i ? 16 : 7,
+              height: 7,
+              borderRadius: 4,
+              background: current === i ? "white" : "rgba(255,255,255,0.5)",
+              border: "none",
+              cursor: "pointer",
+              padding: 0,
+              transition: "all 0.3s",
+            }}
+          />
+        ))}
+      </div>
     </div>
   );
 }

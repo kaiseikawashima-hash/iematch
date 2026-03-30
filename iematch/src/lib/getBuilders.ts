@@ -64,6 +64,7 @@ function toBuilder(row: any): Builder {
     b5_services: row.services ?? [],
     b5_designFreedom: row.design_freedom ?? "",
     b5_annualBuilds: row.annual_builds ?? 0,
+    foundedYear: row.founded_year ?? undefined,
     b6_styles: row.contact_styles ?? [],
     b6_features: row.sales_features ?? [],
     b7_topStrengths: row.top_strengths ?? [],

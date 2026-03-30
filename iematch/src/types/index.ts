@@ -85,6 +85,7 @@ export type Builder = {
   b5_services: string[];
   b5_designFreedom: string;
   b5_annualBuilds: number;
+  foundedYear?: number;
   b6_styles: string[];
   b6_features: string[];
   b7_topStrengths: string[];
