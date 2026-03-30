@@ -1,7 +1,7 @@
 # イエマッチAI 開発TODOリスト
 
 **作成日**: 2026-03-18
-**最終更新**: 2026-03-24
+**最終更新**: 2026-03-30
 
 ---
 
@@ -311,6 +311,215 @@
   - 各カードの「選択中/資料請求」ボタンで選択状態を切り替え
   - 選択中の社数を「まとめて資料請求する（N社）」に反映
 
+## Phase 11.10: テイスト画像管理のSupabase化・ファイルアップロード対応
+
+- [x] 11.10-1. Supabase imagesテーブル作成
+  - CREATE TABLE images（id TEXT PK, url TEXT, updated_at TIMESTAMPTZ）
+  - 初期データ12件INSERT（exterior_* 6件 + interior_* 6件、URL空）
+- [x] 11.10-2. テイスト画像のSupabase取得関数（src/lib/getImages.ts）
+  - getImages(): /api/admin/images からimagesテーブルの画像URLマップを取得
+  - applyImageOverrides(): Q13・Q14のoptions.imageUrlをSupabase値で上書き（イミュータブル）
+  - Supabase未接続・取得失敗時はnull → questions.tsのデフォルトURLをそのまま使用
+- [x] 11.10-3. 診断画面でSupabase画像URL反映（src/app/diagnosis/page.tsx）
+  - useEffectで初回マウント時にgetImages()呼び出し
+  - 画像URLが取得できればQ13・Q14のimageUrlを上書き
+  - questions を baseQuestions → useState管理に変更
+  - getVisibleQuestions()にquestions引数を追加
+- [x] 11.10-4. 画像ファイルアップロードAPI（src/app/api/admin/upload-image/route.ts）
+  - multipart/form-data でファイル+idを受信
+  - public/images/styles/{id}.{ext} に保存（ディレクトリ自動作成）
+  - Vercel本番環境ではファイル書き込み不可（ローカル専用）
+- [x] 11.10-5. admin画像管理タブにファイルアップロード機能追加
+  - 各テイストにURL入力欄 + 「ファイルを選択」ボタンの両方を表示
+  - ファイル選択→即アップロード→プレビュー更新→Supabaseにもパス保存
+  - ページ上部に注意書き（ローカル環境限定・git push必要）
+  - トースト通知（「保存しました」）
+- [x] 11.10-6. questions.tsのimageUrlをローカルファイルパスに統一
+  - Unsplash URL → /images/styles/ext_*.jpg, /images/styles/int_*.jpg に変更
+  - ext_hiraya のみ .webp（実ファイルに合わせて修正）
+
+## Phase 11.11: テイスト画像Supabase完全切り替え
+
+- [x] 11.11-1. Supabase imagesテーブルのID統一
+  - 古い `exterior_*`/`interior_*` 形式の空行を削除
+  - `ext_*`/`int_*` 形式（URLあり）の12レコードに統一
+- [x] 11.11-2. getImages.tsのIDマッピング修正
+  - ID_TO_VALUE を `exterior_*` → `ext_*`、`interior_*` → `int_*` に変更
+  - DBおよびadmin画面のIDと一致するよう統一
+- [x] 11.11-3. admin画像管理タブをURL入力のみに変更
+  - 「ファイルを選択」ボタンとhandleUpload関数を削除
+  - uploading/toast stateを削除
+  - 「ローカル環境でのみ有効」の注記を削除
+  - 保存エラー表示を追加
+- [x] 11.11-4. next.config.tsに外部画像ドメイン追加
+  - cdn.shopify.com, cdn.shopifycdn.com, images.pexels.com, cdn.pixabay.com, lh3.googleusercontent.com, i.imgur.com
+
+## Phase 11.12: Gemini先行APIコール（2段階プリフェッチ）
+
+- [x] 11.12-1. InsightCard表示待ち時間の短縮
+  - Q5/Q13/Q18の回答選択時 → 次のトリガー（Q6/Q14/Q19）のinsight APIを先行呼び出し
+  - Q6/Q14/Q19の回答選択時 → 完全データで再度先行呼び出し（キャッシュ上書き）
+  - insightCacheRef でPromiseをキャッシュ
+  - fetchInsight()でキャッシュヒット時は即表示、ミス時は通常フローにフォールバック
+- [x] 11.12-2. updateAnswer関数にプリフェッチトリガーを統合
+  - PREFETCH_MAP定義（Q5→Q6, Q13→Q14, Q18→Q19）
+  - setAnswers内でプリフェッチを非同期発火
+
+## Phase 11.13: 結果ページ改善（さらに見るトグル・カルーセル・テキスト修正）
+
+- [x] 11.13-1. getRecommendationsの3社制限を撤廃
+  - matching.ts: 70%フィルタ + slice(0,3) → スコア降順全件返却に変更
+  - 絞り込みは結果ページ側のdisplayedBuildersで実施
+- [x] 11.13-2. 「さらに見る」トグル実装
+  - displayedBuilders: マッチ度40%以上を抽出、10社未満ならスコア上位から最大10社確保
+  - 上位5社を初期表示、残り最大5社を「さらに{N}社を見る ∨」ボタンで展開
+  - 展開後は「閉じる ∧」に変更
+  - useState/useMemoを早期return前に配置（React hooksルール準拠）
+- [x] 11.13-3. 初期選択を上位5社に変更
+  - 初期表示の5社のみをselectedIdsにセット
+  - 「まとめて資料請求する（N社）」のNは実際の選択数を動的表示（selectedIds.size）
+- [x] 11.13-4. 固定テキスト「3社」を修正
+  - 比較ヒント: 「3社の資料を見比べて」→「複数社の資料を見比べて」
+- [x] 11.13-5. PhotoCarouselコンポーネント新規作成
+  - src/components/result/PhotoCarousel.tsx
+  - 最大3枚の施工事例写真を4秒間隔で自動スライド
+  - CSS translateX + transition 0.8s ease-in-out のなめらかなアニメーション
+  - アクティブドットが伸びるインジケーター（タップで手動切替可）
+  - 1枚の場合は静止表示、0枚はグレーplaceholder
+  - 結果ページの写真エリアを snap式カルーセル → PhotoCarousel に置換
+- [x] 11.13-6. PhotoCarouselプレースホルダー修正
+  - 画像URL空文字で全件フィルタされスライダーが動かない不具合を修正
+  - 実画像0枚時はplacehold.coのプレースホルダー3枚でスライド表示
+  - next.config.tsにplacehold.coドメイン追加
+
+## Phase 11.14: CTAバナー・corrections反映・カルテメール・ローディング画面
+
+- [x] 11.14-1. 結果ページにCTAバナー追加
+  - 比較セット説明テキスト直後、工務店カードリスト直前に配置
+  - 背景 #E8F0EB・rounded-xl・py-6 px-8・中央寄せ
+  - メイン「気になる会社は見つかりましたか？」（太字）
+  - サブ「資料請求は無料・営業電話なし。1分で完了します。」
+  - ボタン「まとめて資料請求する →」→ 資料請求フォームへスムーズスクロール
+- [x] 11.14-2. correctionsを比較セット説明文の生成に反映
+  - result/page.tsx: fetchComparisonTextにcorrections引数を追加、APIリクエストに含めて送信
+  - api/result-insight/route.ts: corrections存在時のみプロンプトに補正セクションを追加
+  - correctionsが空の場合は従来通りの動作を維持
+- [x] 11.14-3. 資料請求後に家づくりカルテをHTMLメールで送信
+  - api/leads/route.ts: sendKarteMail関数を追加
+  - Gemini 2.0 Flashで5セクション（タイプ解説・アドバイス・落とし穴・チェックリスト・最後に）のカルテを800〜1000文字で生成
+  - corrections対応（補正内容がある場合はプロンプトに含めて優先反映）
+  - markdownToHtml変換関数（##→h2, -→li, **→strong）でHTMLメール化
+  - Resendで送信（件名「【イエマッチAI】あなただけの家づくりカルテをお届けします」）
+  - ヘッダー（#2E5240背景・白テキスト）+ カルテ本文 + フッター構成
+  - try/catchで囲みリード保存・既存メール送信には影響なし
+  - request/page.tsx: correctionsをsessionStorageから取得しAPIリクエストに追加
+- [x] 11.14-4. カルテメールのバグ修正
+  - diagnosisType「未診断」問題: result/page.tsxでiematch_diagnosis_typeをsessionStorageに保存、request/page.tsxで読み取り
+  - markdownToHtml改善: `# `（h1）・`### `（h3）の変換を追加、処理順を###→##→#に修正
+- [x] 11.14-5. 結果ページにカルテティザーカード追加
+  - CTAバナー直後・工務店カードリスト直前に配置
+  - 資料請求前: 🔒タイトル + ブラー表示の5セクション見出し + 半透明オーバーレイ + スクロールボタン
+  - 資料請求後: ✅カルテ送信済み表示に切り替え（iematch_karte_sent フラグで制御）
+- [x] 11.14-6. 診断完了→結果ページ遷移のローディング画面
+  - diagnosis/page.tsx: isLoading stateを追加
+  - 診断完了ボタン押下時にsetIsLoading(true)→router.push("/result")
+  - fixed inset-0 z-50のフルスクリーンオーバーレイ
+  - CSSアニメーションスピナー（@keyframes spin、外部ライブラリ不要）
+  - サブテキスト4メッセージを2秒ごとに切り替え表示
+
+## Phase 11.15: 愛知県専用ランディングページ
+
+- [x] 11.15-1. 愛知県専用LP新規作成（src/app/aichi/page.tsx）
+  - トップページ（page.tsx）をベースに愛知県向けコピーに変更
+  - メインキャッチ「愛知県で家を建てるなら、あなたに合った工務店を。」
+  - サブコピー「愛知県内の優良工務店30社から、AIがあなただけの最適な会社をご提案。無料・3分で完了します。」
+  - ステップ3「愛知県のおすすめ会社を紹介」、実績「30+ 愛知県の登録工務店数」
+  - 選ばれる理由「愛知県特化のマッチング」「愛知県内の地域密着型」
+  - FAQ「愛知県以外でも利用できますか？」に差し替え
+  - フッターCTA「愛知県であなたにぴったりの住宅会社を見つけよう」
+  - 診断ボタンは /diagnosis へ遷移（変更なし）
+- [x] 11.15-2. 愛知県エリア地図をインラインSVGで表示
+  - 外部画像URL（Wikipedia）→ SVGポリゴンで愛知県シルエットを描画
+  - ヒーローセクション直下に配置、「対応エリア：愛知県全域」テキスト付き
+- [x] 11.15-3. SVG中央寄せ・スマホレイアウト修正
+  - インラインstyleをTailwindクラス（flex flex-col items-center my-8）に置き換え
+  - SVGサイズを160x144に縮小してスマホ表示を改善
+- [x] 11.15-4. next.config.ts に upload.wikimedia.org を remotePatterns に追加
+  - ※ SVG差し替え後は不要だが設定として残置
+
+## Phase 11.16: 診断結果ページ全面リニューアル（デザインHTML準拠）
+
+- [x] 11.16-1. result_design.htmlに基づくデザイン全面刷新
+  - カラーパレットをミント系（#2ABFA4）・オレンジ（#FF9F43）に変更
+  - Zen Maru Gothic フォントを layout.tsx に追加（Google Fonts）
+  - スマホファースト（max-width: 393px 中央寄せ）
+- [x] 11.16-2. ヒーローヘッダー追加
+  - ミントグラデーション背景（#2ABFA4→#1D9980→#167A66）
+  - 「🏠 イエマッチAI」ロゴ + 「あなたにぴったりの住宅会社が見つかりました」見出し
+- [x] 11.16-3. タイプカード刷新
+  - イラスト円（プレースホルダー）+ タイプ名 + キャッチコピー + 説明文
+  - 「✨ あなたのタイプ」ラベルバッジ
+  - チャートのロック演出（ぼかし + 🔒アイコン + 「資料請求された方限定」）
+  - カルテ送信済みの場合はロック解除
+- [x] 11.16-4. 工務店カードをデザインHTML準拠に変更
+  - ランク表示（N位バッジ）
+  - マッチ度を星5段階に変換（80%以上→★5、60-79%→★4 等）
+  - 強みタグ（色分け: 青・緑・オレンジ）
+  - お客様の声セクション（ミント左ボーダー + クリーム背景）
+  - 施工実績・創業年の表示
+  - チェックボックス式「この会社に資料請求する」
+  - 「詳しく見る」ボタン・詳細ページリンクを完全削除
+- [x] 11.16-5. カルテミニセクション追加
+  - 「家づくりカルテが届きます」PDFプレビューモック
+  - SAMPLEバッジ + チャート風モック + スケルトンライン
+- [x] 11.16-6. ベネフィットセクション追加
+  - 「イエマッチAIから資料請求すると…」3項目
+    - 初回面談がすぐ本題に入れる（💬）
+    - ベテラン担当者が優先対応（👤）
+    - AI厳選のおすすめ会社もプラス（💡）
+  - 各項目に写真プレースホルダー（グラデーション背景）
+- [x] 11.16-7. インラインフォーム追加
+  - HTMLデザイン準拠のフォームUI（オレンジ枠 + グラデーションバー）
+  - お名前・メール・電話・郵便番号・都道府県・市区町村・番地の7フィールド
+  - 利用規約・プライバシーポリシー同意チェックボックス
+  - 既存 /api/leads API連携
+  - 「完全無料」バッジ + 「30秒で完了。しつこい営業電話はありません。」注記
+- [x] 11.16-8. スティッキーCTAバー追加
+  - 画面下部固定（position: fixed）
+  - 選択中N社表示 + 「無料で資料請求」ボタン
+  - フォームセクションへスムーズスクロール
+- [x] 11.16-9. 選択サマリーバー・インラインCTA
+  - 選択中N社のサマリー表示（ミント/レッド枠の切り替え）
+  - インラインCTAボタン（オレンジグラデーション）
+  - 「さらに見る」ボタン（破線枠・ホバーでミントに変化）
+- [x] 11.16-10. フェードインアニメーション
+  - @keyframes fadeUp でカードの順次フェードイン
+  - @keyframes bounceDown でチャートロックの↓矢印バウンス
+
+## Phase 11.17: 工務店データ拡充・画像スライダー・Admin改善
+
+- [x] 11.17-1. Builder型にfoundedYear追加
+  - src/types/index.ts: foundedYear?: number を追加
+  - src/lib/getBuilders.ts: Supabase変換にfoundedYearマッピング追加
+- [x] 11.17-2. ダミーデータ全30社にfoundedYear設定
+  - 創業年: 1985〜2018の範囲でリアルなダミー値を設定
+  - b5_annualBuilds は全30社に既存設定済み（8〜50の範囲）
+- [x] 11.17-3. 工務店カード画像を3枚スライダーに変更
+  - PhotoSliderコンポーネント新規作成（外部ライブラリなし）
+  - 3枚の画像を4秒ごとに自動スライド（translateX + 0.8s ease-in-out）
+  - ドットインジケーター（●○○）を下部に表示、クリックで手動切替
+  - 画像なし時はグラデーションプレースホルダー3枚を表示
+    （co-photo-1〜3参考: 緑→青→ピンクのグラデーション）
+- [x] 11.17-4. 工務店カードに創業年・年間棟数を表示
+  - 表示形式: 「🏠 年間{N}棟　📅 創業{N}年」
+  - foundedYearから現在年を引いて創業年数を計算
+- [x] 11.17-5. Admin登録フォームに創業年入力欄追加
+  - B5セクションに「創業年」number入力欄を追加
+  - API送信時にfoundedYearをintでパース
+  - Supabase ALTER TABLE SQLをコメントとして記載
+    - ALTER TABLE builders ADD COLUMN founded_year integer;
+    - ALTER TABLE builders ADD COLUMN annual_builds integer;
+
 ## Phase 12: 仕上げ（未着手）
 
 - [ ] 12-1. レスポンシブ対応（375px〜スマホ優先）
@@ -338,3 +547,11 @@
 | 2026-03-24 | Phase 11.7 Supabaseでのポリシー管理（settings→ISR反映）・admin管理画面連携確認 |
 | 2026-03-24 | Phase 11.8 施工事例カルーセル・全30社reviews/photosダミーデータ・Supabase反映 |
 | 2026-03-24 | Phase 11.9 Geminiプロンプト改善・結果ページ4セクション刷新・比較セットAPI・トグル式資料請求 |
+| 2026-03-24 | Phase 11.10 テイスト画像管理Supabase化・ファイルアップロード対応・imageUrlローカルパス統一 |
+| 2026-03-27 | Phase 11.11 テイスト画像Supabase完全切り替え（ID統一・admin簡素化・外部ドメイン追加） |
+| 2026-03-27 | Phase 11.12 Gemini先行APIコール（2段階プリフェッチでInsightCard待ち時間短縮） |
+| 2026-03-27 | Phase 11.13 結果ページ改善（さらに見るトグル・3社制限撤廃・PhotoCarousel・テキスト修正） |
+| 2026-03-27 | Phase 11.14 CTAバナー・corrections反映・カルテメール送信・ティザーカード・ローディング画面 |
+| 2026-03-28 | Phase 11.15 愛知県専用ランディングページ（/aichi）新規作成・SVG地図・中央寄せ修正 |
+| 2026-03-30 | Phase 11.16 診断結果ページ全面リニューアル（デザインHTML準拠・ミント系カラー・インラインフォーム・スティッキーCTA） |
+| 2026-03-30 | Phase 11.17 工務店データ拡充（foundedYear追加）・画像3枚スライダー・Admin創業年入力欄 |
