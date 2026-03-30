@@ -16,6 +16,26 @@ import { AreaMultiSelect } from "@/components/diagnosis/AreaMultiSelect";
 import { FamilyInput } from "@/components/diagnosis/FamilyInput";
 import { InsightCard } from "@/components/diagnosis/InsightCard";
 
+// 配列シャッフル（Fisher-Yates）
+function shuffle<T>(arr: readonly T[]): T[] {
+  const result = [...arr];
+  for (let i = result.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [result[i], result[j]] = [result[j], result[i]];
+  }
+  return result;
+}
+
+// Q13・Q14の画像optionsをシャッフルした質問リストを返す
+function shuffleImageOptions<T extends { id: string; type: string; options: readonly U[] }, U>(questions: T[]): T[] {
+  return questions.map((q) => {
+    if ((q.id === "Q13" || q.id === "Q14") && q.type === "image") {
+      return { ...q, options: shuffle(q.options) };
+    }
+    return q;
+  });
+}
+
 // インサイト表示対象の質問ID
 const INSIGHT_TRIGGER_IDS = new Set(["Q6", "Q14", "Q19"]);
 
@@ -42,12 +62,14 @@ export default function DiagnosisPage() {
   const [answers, setAnswers] = useState<Answer[]>([]);
   const [currentIndex, setCurrentIndex] = useState(0);
 
-  // Supabaseから画像URLを取得してQ13・Q14を上書き
-  const [questions, setQuestions] = useState(baseQuestions);
+  // 初回レンダリング時にQ13・Q14の画像順をシャッフル
+  const [questions, setQuestions] = useState(() => shuffleImageOptions(baseQuestions));
+
+  // Supabaseから画像URLを取得してQ13・Q14を上書き（シャッフル済みの順序を維持）
   useEffect(() => {
     getImages().then((imageMap) => {
       if (imageMap) {
-        setQuestions(applyImageOverrides(baseQuestions, imageMap));
+        setQuestions((prev) => applyImageOverrides(prev, imageMap));
       }
     });
   }, []);

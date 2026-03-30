@@ -97,12 +97,6 @@ export function ImageSelectCard({ options, selected, maxSelect, onToggle }: Prop
                     </div>
                   )}
 
-                  {/* ラベル（下部） */}
-                  <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/50 to-transparent px-2 pb-2 pt-6">
-                    <span className="text-xs font-medium text-white drop-shadow-sm">
-                      {option.label}
-                    </span>
-                  </div>
                 </div>
               ) : (
                 <div className="flex h-full w-full items-center justify-center bg-gray-50 text-sm text-gray-500">
