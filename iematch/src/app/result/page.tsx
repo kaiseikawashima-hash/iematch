@@ -723,7 +723,7 @@ export default function ResultPage() {
                       </b>
                     </span>
                   )}
-                  {yearsInBusiness != null && yearsInBusiness > 0 && (
+                  {builder.foundedYear != null && yearsInBusiness != null && yearsInBusiness > 0 && (
                     <span
                       style={{
                         fontSize: 11,
@@ -735,7 +735,7 @@ export default function ResultPage() {
                     >
                       📅 創業{" "}
                       <b style={{ color: "#4A5C5E", fontWeight: 700 }}>
-                        {yearsInBusiness}年
+                        {builder.foundedYear}年（{yearsInBusiness}年）
                       </b>
                     </span>
                   )}
