@@ -1,0 +1,1114 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>診断結果 | イエマッチAI</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@300;400;500;600;700;800;900&family=Zen+Maru+Gothic:wght@400;500;700;900&display=swap" rel="stylesheet">
+<style>
+:root {
+  --mint: #2ABFA4;
+  --mint-light: #E8FBF6;
+  --mint-pale: #F2FDFB;
+  --mint-dark: #1D9980;
+  --mint-deep: #167A66;
+  --orange: #FF9F43;
+  --orange-dark: #E8740C;
+  --orange-light: #FFF7EE;
+  --cream: #FFFDF8;
+  --warm-white: #FEFCF9;
+  --card: #FFFFFF;
+  --ink: #1A2B2E;
+  --ink-secondary: #4A5C5E;
+  --ink-light: #8A9A9C;
+  --ink-faint: #BFC9CA;
+  --border: #E8EDEF;
+  --border-light: #F2F5F6;
+  --gold: #FFB923;
+  --gold-light: #FFF8E7;
+  --red-soft: #FF6B6B;
+  --shadow-card: 0 2px 12px rgba(26,43,46,0.06), 0 1px 3px rgba(26,43,46,0.04);
+  --shadow-elevated: 0 8px 30px rgba(26,43,46,0.08), 0 2px 8px rgba(26,43,46,0.04);
+  --shadow-cta: 0 6px 24px rgba(232,116,12,0.3);
+  --r-sm: 12px;
+  --r-md: 18px;
+  --r-lg: 24px;
+}
+
+*{margin:0;padding:0;box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{
+  font-family:'Noto Sans JP',sans-serif;
+  background:#E8EDEF;
+  color:var(--ink);
+  -webkit-font-smoothing:antialiased;
+  line-height:1.7;
+}
+
+/* ===== PHONE FRAME ===== */
+.device{
+  max-width:393px;margin:32px auto;
+  border-radius:44px;overflow:hidden;
+  border:7px solid #111;
+  box-shadow:0 20px 60px rgba(0,0,0,0.18);
+  position:relative;
+  background:var(--warm-white);
+}
+.notch{
+  position:absolute;top:7px;left:50%;transform:translateX(-50%);
+  width:120px;height:28px;background:#111;
+  border-radius:0 0 18px 18px;z-index:200;
+}
+
+/* ===== HERO HEADER ===== */
+.hero{
+  background:linear-gradient(160deg,#2ABFA4 0%,#1D9980 40%,#167A66 100%);
+  padding:52px 24px 32px;
+  color:white;position:relative;overflow:hidden;
+}
+.hero::before{
+  content:'';position:absolute;
+  top:-60px;right:-40px;
+  width:200px;height:200px;
+  background:radial-gradient(circle,rgba(255,255,255,0.08) 0%,transparent 70%);
+  border-radius:50%;
+}
+.hero::after{
+  content:'';position:absolute;
+  bottom:-30px;left:-20px;
+  width:140px;height:140px;
+  background:radial-gradient(circle,rgba(255,255,255,0.05) 0%,transparent 70%);
+  border-radius:50%;
+}
+.hero-logo{
+  font-family:'Zen Maru Gothic',sans-serif;
+  font-size:13px;font-weight:700;
+  opacity:0.8;letter-spacing:0.5px;
+  margin-bottom:16px;
+}
+.hero-headline{
+  font-family:'Zen Maru Gothic',sans-serif;
+  font-size:20px;font-weight:900;
+  line-height:1.4;margin-bottom:4px;
+}
+.hero-sub{
+  font-size:12.5px;opacity:0.75;font-weight:400;
+}
+
+.page{padding:0 16px 0;position:relative;}
+
+/* ===== TYPE RESULT CARD ===== */
+.type-card{
+  background:var(--card);
+  border-radius:var(--r-lg);
+  padding:0;
+  margin-top:-16px;
+  position:relative;z-index:2;
+  box-shadow:var(--shadow-elevated);
+  overflow:hidden;
+}
+.type-card-inner{padding:28px 22px 24px;}
+.type-label{
+  display:inline-flex;align-items:center;gap:5px;
+  background:var(--mint-light);
+  color:var(--mint-dark);
+  font-size:11.5px;font-weight:700;
+  padding:5px 13px;border-radius:20px;
+  margin-bottom:16px;letter-spacing:0.3px;
+}
+.type-name{
+  font-family:'Zen Maru Gothic',sans-serif;
+  font-size:27px;font-weight:900;
+  color:var(--ink);line-height:1.25;
+  margin-bottom:4px;
+}
+.type-catch{
+  font-size:13.5px;color:var(--mint-dark);
+  font-weight:600;line-height:1.5;
+  margin-bottom:24px;
+}
+
+/* Illustration */
+.type-illust{
+  display:flex;justify-content:center;
+  margin-bottom:24px;
+}
+.illust-circle{
+  width:180px;height:180px;
+  border-radius:50%;
+  background:linear-gradient(150deg,#F0FDF9 0%,#D9F5EE 50%,#C2EDE3 100%);
+  display:flex;align-items:center;justify-content:center;
+  position:relative;
+}
+.illust-circle::before{
+  content:'';position:absolute;inset:-5px;
+  border-radius:50%;
+  border:1.5px dashed rgba(42,191,164,0.2);
+}
+.illust-circle svg{width:130px;height:130px;}
+
+.type-desc{
+  font-size:13.5px;line-height:1.9;
+  color:var(--ink-secondary);
+  margin-bottom:24px;
+}
+
+/* Chart preview */
+.chart-box{
+  background:var(--mint-pale);
+  border-radius:var(--r-md);
+  padding:18px 18px 0;
+  position:relative;overflow:hidden;
+  border:1px solid rgba(42,191,164,0.08);
+}
+.chart-label{
+  font-size:12.5px;font-weight:700;
+  color:var(--ink);margin-bottom:12px;
+}
+.chart-wrap{
+  max-width:200px;margin:0 auto;
+  aspect-ratio:1;
+}
+.chart-wrap svg{width:100%;height:100%;}
+.chart-fade{
+  position:absolute;bottom:0;left:0;right:0;
+  height:55%;
+  background:linear-gradient(0deg,var(--mint-pale) 30%,rgba(242,253,251,0.97) 65%,transparent 100%);
+  display:flex;flex-direction:column;
+  align-items:center;justify-content:flex-end;
+  padding-bottom:18px;gap:8px;
+  backdrop-filter:blur(4px);
+}
+.chart-lock-icon{
+  width:40px;height:40px;
+  background:var(--orange);
+  border-radius:50%;
+  display:flex;align-items:center;justify-content:center;
+  font-size:18px;color:white;
+  box-shadow:0 4px 14px rgba(232,116,12,0.3);
+}
+.chart-lock-text{
+  font-size:12.5px;font-weight:700;
+  color:var(--ink);text-align:center;
+  line-height:1.5;
+}
+.chart-lock-text em{
+  font-style:normal;
+  color:var(--orange-dark);
+}
+.chart-lock-sub{
+  display:inline-flex;align-items:center;gap:4px;
+  background:white;
+  padding:6px 14px;border-radius:20px;
+  font-size:11px;font-weight:600;
+  color:var(--ink-light);
+  box-shadow:0 2px 8px rgba(0,0,0,0.05);
+  border:1px solid var(--border-light);
+}
+.chart-lock-guide{
+  font-size:13px;font-weight:700;
+  color:var(--mint-dark);
+  text-align:center;
+  margin-top:2px;
+}
+.chart-lock-arrow{
+  font-size:20px;
+  color:var(--mint);
+  font-weight:800;
+  animation:bounceDown 1.5s ease infinite;
+  line-height:1;
+}
+@keyframes bounceDown{
+  0%,100%{transform:translateY(0);opacity:0.5;}
+  50%{transform:translateY(6px);opacity:1;}
+}
+
+/* ===== SECTION HEADERS ===== */
+.sec-head{
+  display:flex;align-items:flex-end;
+  justify-content:space-between;
+  margin:36px 0 16px;
+}
+.sec-title{
+  font-family:'Zen Maru Gothic',sans-serif;
+  font-size:18px;font-weight:800;
+  color:var(--ink);
+  display:flex;align-items:center;gap:8px;
+}
+.sec-title::before{
+  content:'';width:4px;height:20px;
+  background:var(--mint);border-radius:2px;
+  flex-shrink:0;
+}
+.sec-meta{
+  font-size:11.5px;color:var(--ink-faint);font-weight:500;
+}
+
+/* ===== COMPANY CARD ===== */
+.co-card{
+  background:var(--card);
+  border-radius:var(--r-md);
+  overflow:hidden;
+  box-shadow:var(--shadow-card);
+  margin-bottom:14px;
+  border:1px solid var(--border-light);
+}
+.co-photo{
+  width:100%;height:180px;
+  position:relative;overflow:hidden;
+}
+.co-photo img{
+  width:100%;height:100%;
+  object-fit:cover;display:block;
+}
+.co-photo-placeholder{
+  width:100%;height:100%;
+  display:flex;align-items:center;justify-content:center;
+  font-size:11px;color:rgba(255,255,255,0.5);
+  font-weight:600;letter-spacing:1px;
+}
+.co-photo-1{background:linear-gradient(135deg,#a8e6cf,#88d8b0);}
+.co-photo-2{background:linear-gradient(135deg,#a8d8ea,#82c4d6);}
+.co-photo-3{background:linear-gradient(135deg,#ffd3b6,#ffaaa5);}
+.co-photo-4{background:linear-gradient(135deg,#d4a5ff,#b388eb);}
+.co-photo-5{background:linear-gradient(135deg,#fce38a,#f9d56e);}
+.co-rank{
+  position:absolute;top:12px;left:12px;
+  background:rgba(26,43,46,0.7);
+  backdrop-filter:blur(10px);
+  color:white;font-size:11px;font-weight:700;
+  padding:5px 12px;border-radius:8px;
+}
+.co-body{padding:18px 20px 20px;}
+.co-name{
+  font-family:'Zen Maru Gothic',sans-serif;
+  font-size:17px;font-weight:800;
+  color:var(--ink);margin-bottom:3px;
+}
+.co-area{
+  font-size:12px;color:var(--ink-light);
+  font-weight:400;margin-bottom:10px;
+}
+.co-stars{
+  display:flex;align-items:center;gap:8px;
+  margin-bottom:12px;
+}
+.co-stars-label{
+  font-size:11px;font-weight:600;
+  color:var(--ink-light);
+}
+.stars{display:flex;gap:1px;}
+.s-on{color:var(--gold);font-size:16px;}
+.s-off{color:#DFE6E9;font-size:16px;}
+.co-tags{display:flex;flex-wrap:wrap;gap:5px;margin-bottom:14px;}
+.co-tag{
+  font-size:10.5px;font-weight:600;
+  padding:4px 10px;border-radius:6px;
+}
+.ct-bl{background:#EBF5FB;color:#2980B9;}
+.ct-gn{background:#EAFAF1;color:#27AE60;}
+.ct-or{background:#FEF5E7;color:#E67E22;}
+.co-desc{
+  font-size:13px;line-height:1.8;
+  color:var(--ink-secondary);margin-bottom:14px;
+}
+.co-voice{
+  background:var(--cream);
+  border-radius:var(--r-sm);
+  padding:14px 16px;
+  border-left:3px solid var(--mint);
+  margin-bottom:12px;
+}
+.co-voice-head{
+  font-size:10.5px;font-weight:700;
+  color:var(--mint-dark);margin-bottom:5px;
+}
+.co-voice-text{
+  font-size:12px;line-height:1.7;
+  color:var(--ink-secondary);
+  font-style:italic;
+}
+.co-stats{
+  display:flex;gap:16px;margin-bottom:16px;
+}
+.co-stat{
+  font-size:11px;color:var(--ink-light);
+  display:flex;align-items:center;gap:3px;
+}
+.co-stat b{color:var(--ink-secondary);font-weight:700;}
+
+/* Checkbox row */
+.co-check{
+  padding-top:14px;
+  border-top:1px solid var(--border-light);
+  display:flex;align-items:center;gap:10px;
+  cursor:pointer;
+}
+.chk{
+  width:24px;height:24px;border-radius:7px;
+  border:2px solid var(--border);
+  display:flex;align-items:center;justify-content:center;
+  flex-shrink:0;transition:all 0.2s;
+}
+.chk.on{
+  background:var(--mint);border-color:var(--mint);
+  color:white;font-size:13px;font-weight:800;
+}
+.co-check-text{
+  font-size:13px;font-weight:600;
+  color:var(--ink-light);
+  transition:color 0.2s;
+}
+.co-check.active .co-check-text{color:var(--mint-dark);}
+
+/* More btn */
+.more-btn{
+  width:100%;padding:15px;
+  background:var(--card);
+  border:1.5px dashed var(--border);
+  border-radius:var(--r-md);
+  font-size:13.5px;font-weight:600;
+  color:var(--ink-secondary);
+  cursor:pointer;display:flex;
+  align-items:center;justify-content:center;gap:6px;
+  margin-bottom:8px;
+  font-family:'Noto Sans JP',sans-serif;
+  transition:all 0.2s;
+}
+.more-btn:hover{
+  border-color:var(--mint);
+  color:var(--mint-dark);
+  background:var(--mint-pale);
+}
+
+/* Inline CTA */
+.cta-inline{
+  display:flex;align-items:center;
+  justify-content:center;gap:8px;
+  padding:16px 20px;
+  background:linear-gradient(135deg,var(--orange),var(--orange-dark));
+  color:white;border-radius:var(--r-md);
+  font-size:14.5px;font-weight:700;
+  text-decoration:none;
+  box-shadow:var(--shadow-cta);
+  margin:18px 0 6px;
+  transition:transform 0.15s,box-shadow 0.15s;
+  font-family:'Noto Sans JP',sans-serif;
+  border:none;width:100%;cursor:pointer;
+}
+.cta-inline:hover{
+  transform:translateY(-1px);
+  box-shadow:0 8px 28px rgba(232,116,12,0.38);
+}
+.cta-hint{
+  text-align:center;font-size:11px;
+  color:var(--ink-faint);margin-bottom:12px;
+}
+
+/* Selection bar */
+.sel-bar{
+  background:var(--card);
+  border-radius:var(--r-md);
+  padding:16px 20px;
+  margin-top:12px;
+  box-shadow:var(--shadow-card);
+  display:flex;align-items:center;
+  justify-content:space-between;
+}
+.sel-bar.ok{border:2px solid var(--mint);}
+.sel-bar.ng{border:2px solid var(--red-soft);}
+.sel-count{
+  font-size:14px;font-weight:700;color:var(--ink);
+}
+.sel-count span{font-size:22px;}
+.sel-count .c-ok{color:var(--mint);}
+.sel-count .c-ng{color:var(--red-soft);}
+.sel-note{
+  font-size:11px;font-weight:600;
+}
+.sel-note.n-ok{color:var(--ink-faint);}
+.sel-note.n-ng{color:var(--red-soft);}
+
+/* ===== BENEFITS ===== */
+.bene-card{
+  background:linear-gradient(150deg,#FFFAF2,#FFF5E6);
+  border-radius:var(--r-lg);
+  padding:24px 20px;
+  margin-top:28px;
+  border:1px solid rgba(232,116,12,0.08);
+}
+.bene-title{
+  font-family:'Zen Maru Gothic',sans-serif;
+  font-size:15px;font-weight:800;
+  color:var(--ink);text-align:center;
+  margin-bottom:18px;
+}
+.bene-item{
+  display:flex;gap:12px;
+  align-items:flex-start;
+  margin-bottom:14px;
+}
+.bene-item:last-child{margin-bottom:0;}
+.bene-ico{
+  width:38px;height:38px;border-radius:10px;
+  display:flex;align-items:center;justify-content:center;
+  font-size:18px;flex-shrink:0;
+}
+.bi-1{background:#EBF5FB;}
+.bi-2{background:#EAFAF1;}
+.bi-3{background:var(--orange-light);}
+.bene-text{flex:1;}
+.bene-text strong{
+  display:block;font-size:13px;
+  font-weight:700;color:var(--ink);
+  margin-bottom:2px;
+}
+.bene-text p{
+  font-size:11.5px;line-height:1.6;
+  color:var(--ink-secondary);
+}
+
+/* Benefit photo placeholder */
+.bene-photo{
+  width:100%;aspect-ratio:16/9;
+  border-radius:var(--r-sm);overflow:hidden;
+  margin-top:10px;position:relative;
+}
+.bene-photo-inner{
+  width:100%;height:100%;
+  display:flex;align-items:center;justify-content:center;
+  font-size:11px;color:rgba(255,255,255,0.55);
+  font-weight:600;letter-spacing:0.5px;
+}
+.bp-1{background:linear-gradient(135deg,#d4efdf,#a9dfbf);}
+.bp-2{background:linear-gradient(135deg,#d6eaf8,#aed6f1);}
+.bp-3{background:linear-gradient(135deg,#fdebd0,#f5cba7);}
+.bene-photo-note{
+  position:absolute;bottom:6px;right:6px;
+  background:rgba(0,0,0,0.4);backdrop-filter:blur(6px);
+  color:white;font-size:9px;font-weight:600;
+  padding:3px 8px;border-radius:4px;
+}
+
+/* Karute bonus */
+.karute-mini{
+  display:flex;flex-direction:column;gap:14px;
+  background:var(--mint-pale);
+  border-radius:var(--r-md);
+  padding:18px 18px 20px;margin-top:14px;
+  border:1px solid rgba(42,191,164,0.1);
+}
+.karute-mini-top{
+  display:flex;align-items:center;gap:12px;
+}
+.karute-mini-ico{
+  width:34px;height:34px;background:white;
+  border-radius:9px;display:flex;
+  align-items:center;justify-content:center;
+  font-size:17px;flex-shrink:0;
+}
+.karute-mini-text{
+  font-size:12px;line-height:1.55;
+  color:var(--ink-secondary);
+}
+.karute-mini-text strong{
+  color:var(--mint-dark);font-weight:700;
+}
+.karute-preview{
+  background:white;border-radius:var(--r-sm);
+  overflow:hidden;box-shadow:0 2px 10px rgba(0,0,0,0.05);
+  border:1px solid var(--border-light);
+}
+.karute-preview-img{
+  width:100%;aspect-ratio:210/148;
+  background:linear-gradient(160deg,#F8FFFE,#EFF9F6,#E5F5F0);
+  display:flex;align-items:center;justify-content:center;
+  padding:16px;position:relative;
+}
+.karute-mock{
+  width:82%;max-width:240px;background:white;
+  border-radius:6px;box-shadow:0 3px 14px rgba(0,0,0,0.07);
+  padding:12px 14px;position:relative;
+}
+.karute-mock-header{
+  display:flex;align-items:center;gap:6px;
+  margin-bottom:8px;padding-bottom:7px;
+  border-bottom:1.5px solid var(--mint-light);
+}
+.karute-mock-logo{font-size:9px;font-weight:700;color:var(--mint-dark);}
+.karute-mock-title{
+  font-family:'Zen Maru Gothic',sans-serif;
+  font-size:8px;font-weight:700;color:var(--ink);
+}
+.karute-mock-body{display:flex;gap:10px;}
+.karute-mock-chart{
+  width:55px;height:55px;border-radius:50%;
+  border:2px solid var(--mint);opacity:0.5;
+  flex-shrink:0;position:relative;
+}
+.karute-mock-chart::after{
+  content:'';position:absolute;
+  top:50%;left:50%;transform:translate(-50%,-50%);
+  width:28px;height:28px;background:var(--mint);
+  opacity:0.15;border-radius:50%;
+}
+.karute-mock-lines{
+  flex:1;display:flex;flex-direction:column;
+  gap:4px;padding-top:3px;
+}
+.km-line{height:4px;border-radius:3px;background:var(--border);}
+.km-line:nth-child(1){width:100%;}
+.km-line:nth-child(2){width:75%;}
+.km-line:nth-child(3){width:90%;}
+.km-line:nth-child(4){width:55%;}
+.km-line:nth-child(5){width:80%;}
+.karute-mock-badge{
+  position:absolute;top:-5px;right:-5px;
+  background:var(--orange);color:white;
+  font-size:6.5px;font-weight:700;
+  padding:2px 5px;border-radius:3px;
+}
+.karute-preview-label{
+  padding:9px 14px;background:var(--cream);
+  display:flex;align-items:center;justify-content:center;gap:6px;
+  font-size:10.5px;font-weight:600;color:var(--ink-secondary);
+}
+.karute-preview-label span{
+  font-size:9px;background:var(--mint-light);color:var(--mint-dark);
+  padding:2px 7px;border-radius:10px;font-weight:700;
+}
+
+/* ===== FORM ===== */
+.form-section{margin-top:28px;}
+.form-card{
+  background:var(--card);
+  border-radius:var(--r-lg);
+  padding:28px 22px 32px;
+  box-shadow:var(--shadow-elevated);
+  border:2px solid var(--orange);
+  position:relative;overflow:hidden;
+}
+.form-card::before{
+  content:'';position:absolute;
+  top:0;left:0;right:0;height:4px;
+  background:linear-gradient(90deg,var(--orange),var(--orange-dark));
+}
+.form-title{
+  font-family:'Zen Maru Gothic',sans-serif;
+  font-size:18px;font-weight:800;
+  text-align:center;margin-top:4px;margin-bottom:4px;
+}
+.form-sub{
+  text-align:center;font-size:12.5px;
+  color:var(--ink-secondary);margin-bottom:6px;
+}
+.form-free{text-align:center;margin-bottom:22px;}
+.form-free span{
+  display:inline-block;
+  background:#FFF0F0;color:#E53935;
+  font-size:11.5px;font-weight:700;
+  padding:4px 16px;border-radius:20px;
+}
+.fg{margin-bottom:16px;}
+.fl{
+  font-size:12px;font-weight:600;
+  color:var(--ink-secondary);
+  margin-bottom:5px;display:flex;
+  align-items:center;gap:4px;
+}
+.fl .req{
+  font-size:9.5px;color:#E53935;
+  font-weight:700;
+}
+.fl .opt{
+  font-size:9.5px;color:var(--ink-faint);
+  font-weight:500;
+}
+.fi{
+  width:100%;padding:13px 15px;
+  border:1.5px solid var(--border);
+  border-radius:var(--r-sm);
+  font-size:15px;font-family:'Noto Sans JP',sans-serif;
+  background:#FAFBFC;color:var(--ink);
+  transition:border-color 0.2s;
+  outline:none;
+}
+.fi::placeholder{color:var(--ink-faint);}
+.fi:focus{border-color:var(--mint);}
+.fi-row{display:flex;gap:8px;align-items:center;}
+.fi-auto{
+  font-size:12px;color:var(--mint-dark);
+  font-weight:600;white-space:nowrap;cursor:pointer;
+}
+.fi-select{position:relative;}
+.fi-select .fi{padding-right:36px;}
+.fi-select::after{
+  content:'▾';position:absolute;
+  right:14px;top:50%;transform:translateY(-50%);
+  font-size:13px;color:var(--ink-faint);
+  pointer-events:none;
+}
+.form-agree{
+  display:flex;align-items:flex-start;
+  gap:8px;margin:20px 0;
+}
+.form-agree-box{
+  width:20px;height:20px;
+  border:2px solid var(--border);
+  border-radius:5px;flex-shrink:0;
+  margin-top:1px;
+}
+.form-agree-text{
+  font-size:11.5px;line-height:1.5;
+  color:var(--ink-secondary);
+}
+.form-agree-text a{
+  color:var(--mint-dark);text-decoration:underline;
+}
+.form-submit{
+  width:100%;padding:18px;
+  background:linear-gradient(135deg,var(--orange),var(--orange-dark));
+  color:white;border:none;
+  border-radius:var(--r-md);
+  font-size:16px;font-weight:700;
+  font-family:'Noto Sans JP',sans-serif;
+  cursor:pointer;
+  box-shadow:var(--shadow-cta);
+  display:flex;align-items:center;
+  justify-content:center;gap:8px;
+  transition:transform 0.15s,box-shadow 0.15s;
+}
+.form-submit:hover{
+  transform:translateY(-1px);
+  box-shadow:0 8px 28px rgba(232,116,12,0.4);
+}
+.form-note{
+  text-align:center;font-size:11px;
+  color:var(--ink-faint);margin-top:10px;
+}
+
+/* ===== STICKY BAR ===== */
+.sticky{
+  position:sticky;bottom:0;
+  background:white;
+  padding:10px 16px 12px;
+  box-shadow:0 -3px 16px rgba(0,0,0,0.07);
+  z-index:100;
+  border-top:1px solid var(--border-light);
+}
+.sticky a{
+  text-decoration:none;
+  display:flex;align-items:center;gap:12px;
+}
+.sticky-info{flex:1;}
+.sticky-count{
+  font-size:13px;font-weight:700;color:var(--ink);
+}
+.sticky-count span{
+  color:var(--mint);font-size:18px;font-weight:800;
+}
+.sticky-hint{
+  font-size:10.5px;color:var(--ink-light);
+}
+.sticky-btn{
+  flex-shrink:0;
+  padding:12px 20px;
+  background:linear-gradient(135deg,var(--orange),var(--orange-dark));
+  color:white;border:none;
+  border-radius:var(--r-sm);
+  font-size:13px;font-weight:700;
+  font-family:'Noto Sans JP',sans-serif;
+  cursor:pointer;
+  box-shadow:0 3px 12px rgba(232,116,12,0.25);
+}
+
+/* Fade-in animations */
+@keyframes fadeUp{
+  from{opacity:0;transform:translateY(16px)}
+  to{opacity:1;transform:translateY(0)}
+}
+.type-card{animation:fadeUp 0.6s ease both;}
+.co-card:nth-child(1){animation:fadeUp 0.5s 0.1s ease both;}
+.co-card:nth-child(2){animation:fadeUp 0.5s 0.2s ease both;}
+.co-card:nth-child(3){animation:fadeUp 0.5s 0.3s ease both;}
+
+/* Page title (outside frame) */
+.outer-title{
+  max-width:393px;margin:48px auto 6px;
+  font-family:'Zen Maru Gothic',sans-serif;
+  font-size:20px;font-weight:900;color:var(--ink);
+}
+.outer-sub{
+  max-width:393px;margin:0 auto 20px;
+  font-size:13px;color:var(--ink-secondary);
+}
+</style>
+</head>
+<body>
+
+<p class="outer-title">イエマッチAI 診断結果</p>
+<p class="outer-sub">完全版デザイン — モバイルファースト 393px</p>
+
+<div class="device">
+<div class="notch"></div>
+
+<!-- ===== HERO ===== -->
+<div class="hero">
+  <div class="hero-logo">🏠 イエマッチAI</div>
+  <p class="hero-headline">あなたにぴったりの<br>住宅会社が見つかりました</p>
+  <p class="hero-sub">診断回答をもとにAIがマッチングしました</p>
+</div>
+
+<div class="page">
+
+<!-- ===== TYPE RESULT ===== -->
+<div class="type-card">
+  <div class="type-card-inner">
+    <span class="type-label">✨ あなたのタイプ</span>
+    <h1 class="type-name">こだわりバランス型</h1>
+    <p class="type-catch">性能もデザインも妥協しない、納得派のあなたへ</p>
+
+    <div class="type-illust">
+      <div class="illust-circle">
+        <svg viewBox="0 0 140 140" fill="none">
+          <ellipse cx="70" cy="126" rx="46" ry="7" fill="#1D9980" opacity="0.08"/>
+          <path d="M70 8 L108 36 L108 72 L32 72 L32 36Z" fill="#2ABFA4" opacity="0.05"/>
+          <!-- Papa -->
+          <path d="M88 78 C79 78 73 85 73 92L73 110C73 112 74.5 114 77 114L99 114C101.5 114 103 112 103 110L103 92C103 85 97 78 88 78Z" fill="#5B86E5"/>
+          <path d="M81 78L88 86L95 78" fill="none" stroke="white" stroke-width="1.8" stroke-linecap="round"/>
+          <circle cx="88" cy="63" r="16" fill="#FFE0B2"/>
+          <path d="M72 59C72 50 79 43 88 43C97 43 104 50 104 59L104 55C104 46 97 39 88 39C79 39 72 46 72 55Z" fill="#4E342E"/>
+          <path d="M72 59C72 57 73.5 55 75 55C75 57.5 73 59 72 59Z" fill="#4E342E"/>
+          <path d="M104 59C104 57 102.5 55 101 55C101 57.5 103 59 104 59Z" fill="#4E342E"/>
+          <circle cx="83" cy="61" r="2" fill="#4E342E"/><circle cx="93" cy="61" r="2" fill="#4E342E"/>
+          <circle cx="83.6" cy="60.4" r="0.7" fill="white"/><circle cx="93.6" cy="60.4" r="0.7" fill="white"/>
+          <path d="M85 68Q88 72 91 68" fill="none" stroke="#4E342E" stroke-width="1.4" stroke-linecap="round"/>
+          <ellipse cx="79" cy="66" rx="3" ry="1.8" fill="#FFAB91" opacity="0.4"/>
+          <ellipse cx="97" cy="66" rx="3" ry="1.8" fill="#FFAB91" opacity="0.4"/>
+          <!-- Mama -->
+          <path d="M52 80C43 80 37 87 37 94L37 110C37 112 38.5 114 41 114L63 114C65.5 114 67 112 67 110L67 94C67 87 61 80 52 80Z" fill="#FF9F43"/>
+          <path d="M45 80L52 87L59 80" fill="none" stroke="white" stroke-width="1.8" stroke-linecap="round"/>
+          <circle cx="52" cy="65" r="16" fill="#FFE0B2"/>
+          <path d="M36 61C36 50 43 43 52 43C61 43 68 50 68 61" fill="#5D4037"/>
+          <path d="M36 61C36 61 34 72 37 78" fill="none" stroke="#5D4037" stroke-width="4.5" stroke-linecap="round"/>
+          <path d="M68 61C68 61 70 72 67 78" fill="none" stroke="#5D4037" stroke-width="4.5" stroke-linecap="round"/>
+          <path d="M39 57C41 52 46 48 52 48C58 48 63 52 65 57" fill="#5D4037"/>
+          <circle cx="47" cy="63" r="2" fill="#4E342E"/><circle cx="57" cy="63" r="2" fill="#4E342E"/>
+          <circle cx="47.6" cy="62.4" r="0.7" fill="white"/><circle cx="57.6" cy="62.4" r="0.7" fill="white"/>
+          <path d="M49 71Q52 75 55 71" fill="none" stroke="#4E342E" stroke-width="1.4" stroke-linecap="round"/>
+          <ellipse cx="43" cy="69" rx="3" ry="1.8" fill="#FFAB91" opacity="0.45"/>
+          <ellipse cx="61" cy="69" rx="3" ry="1.8" fill="#FFAB91" opacity="0.45"/>
+          <!-- Child -->
+          <path d="M70 98C65 98 60 102 60 107L60 116C60 117.5 61 119 63 119L77 119C79 119 80 117.5 80 116L80 107C80 102 75 98 70 98Z" fill="#FFD93D"/>
+          <circle cx="70" cy="89" r="11" fill="#FFE0B2"/>
+          <path d="M59 86C59 80 64 76 70 76C76 76 81 80 81 86" fill="#6D4C41"/>
+          <path d="M70 76C70 76 68 72 72 72.5" fill="none" stroke="#6D4C41" stroke-width="1.8" stroke-linecap="round"/>
+          <circle cx="66" cy="88" r="2.2" fill="#4E342E"/><circle cx="74" cy="88" r="2.2" fill="#4E342E"/>
+          <circle cx="66.7" cy="87.3" r="0.8" fill="white"/><circle cx="74.7" cy="87.3" r="0.8" fill="white"/>
+          <path d="M67.5 94Q70 97 72.5 94" fill="none" stroke="#4E342E" stroke-width="1.3" stroke-linecap="round"/>
+          <ellipse cx="63" cy="92" rx="2.5" ry="1.5" fill="#FFAB91" opacity="0.45"/>
+          <ellipse cx="77" cy="92" rx="2.5" ry="1.5" fill="#FFAB91" opacity="0.45"/>
+          <!-- Deco -->
+          <text x="18" y="28" font-size="10" fill="#FFB923">✦</text>
+          <text x="118" y="24" font-size="8" fill="#2ABFA4">✦</text>
+          <text x="70" y="34" font-size="8" fill="#FF9F43" text-anchor="middle">♥</text>
+        </svg>
+      </div>
+    </div>
+
+    <p class="type-desc">
+      あなたは住まいの快適さとデザイン性をバランスよく求めるタイプです。断熱・気密などの住宅性能にこだわりつつ、暮らしを豊かにする空間デザインも大切にしています。家族の将来を見据えた長期的な視点も持ち合わせています。
+    </p>
+
+    <div class="chart-box">
+      <p class="chart-label">📊 あなたの家づくりプロフィール</p>
+      <div class="chart-wrap">
+        <svg viewBox="0 0 220 220">
+          <polygon points="110,20 190,75 175,165 45,165 30,75" fill="none" stroke="#E0EBE8" stroke-width="1"/>
+          <polygon points="110,45 170,85 160,150 60,150 50,85" fill="none" stroke="#E0EBE8" stroke-width="1"/>
+          <polygon points="110,70 150,95 145,135 75,135 70,95" fill="none" stroke="#E0EBE8" stroke-width="1"/>
+          <line x1="110" y1="110" x2="110" y2="20" stroke="#E0EBE8" stroke-width="1"/>
+          <line x1="110" y1="110" x2="190" y2="75" stroke="#E0EBE8" stroke-width="1"/>
+          <line x1="110" y1="110" x2="175" y2="165" stroke="#E0EBE8" stroke-width="1"/>
+          <line x1="110" y1="110" x2="45" y2="165" stroke="#E0EBE8" stroke-width="1"/>
+          <line x1="110" y1="110" x2="30" y2="75" stroke="#E0EBE8" stroke-width="1"/>
+          <polygon points="110,35 178,80 160,155 55,145 45,78" fill="rgba(42,191,164,0.12)" stroke="#2ABFA4" stroke-width="2"/>
+          <circle cx="110" cy="35" r="4" fill="#2ABFA4"/><circle cx="178" cy="80" r="4" fill="#2ABFA4"/>
+          <circle cx="160" cy="155" r="4" fill="#2ABFA4"/><circle cx="55" cy="145" r="4" fill="#2ABFA4"/>
+          <circle cx="45" cy="78" r="4" fill="#2ABFA4"/>
+          <text x="110" y="14" text-anchor="middle" font-size="10" fill="#4A5C5E" font-weight="600">デザイン</text>
+          <text x="196" y="78" text-anchor="start" font-size="10" fill="#4A5C5E" font-weight="600">性能</text>
+          <text x="180" y="173" text-anchor="start" font-size="10" fill="#4A5C5E" font-weight="600">予算</text>
+          <text x="40" y="173" text-anchor="end" font-size="10" fill="#4A5C5E" font-weight="600">立地</text>
+          <text x="24" y="78" text-anchor="end" font-size="10" fill="#4A5C5E" font-weight="600">間取り</text>
+        </svg>
+      </div>
+      <div class="chart-fade">
+        <div class="chart-lock-icon">🔒</div>
+        <p class="chart-lock-text">詳しい分析結果は<br><em>資料請求された方限定</em>でお届け</p>
+        <p class="chart-lock-guide">まずは気になる工務店を選んでみましょう</p>
+        <div class="chart-lock-arrow">↓</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ===== MATCHING COMPANIES ===== -->
+<div class="sec-head">
+  <h2 class="sec-title">あなたに合う工務店</h2>
+  <span class="sec-meta">全8社中 上位3社</span>
+</div>
+
+<!-- Company 1 -->
+<div class="co-card">
+  <div class="co-photo co-photo-1">
+    <div class="co-photo-placeholder">施工事例イメージ</div>
+    <span class="co-rank">1位</span>
+  </div>
+  <div class="co-body">
+    <h3 class="co-name">〇〇工務店</h3>
+    <p class="co-area">📍 愛知県名古屋市 / 尾張エリア対応</p>
+    <div class="co-stars">
+      <span class="co-stars-label">マッチ度</span>
+      <div class="stars"><span class="s-on">★</span><span class="s-on">★</span><span class="s-on">★</span><span class="s-on">★</span><span class="s-on">★</span></div>
+    </div>
+    <div class="co-tags">
+      <span class="co-tag ct-bl">高気密・高断熱</span>
+      <span class="co-tag ct-gn">自然素材</span>
+      <span class="co-tag ct-or">デザイン住宅</span>
+    </div>
+    <p class="co-desc">自然素材と高い断熱性能を両立した家づくりが強み。一棟一棟、暮らし方に合わせた完全自由設計を提供。</p>
+    <div class="co-voice">
+      <p class="co-voice-head">👤 お客様の声</p>
+      <p class="co-voice-text">「私たちの暮らし方を丁寧に聞いてくれて、完成した家は期待以上。毎日帰るのが楽しみです。」</p>
+    </div>
+    <div class="co-stats">
+      <span class="co-stat">🏠 施工実績 <b>年間32棟</b></span>
+      <span class="co-stat">📅 創業 <b>18年</b></span>
+    </div>
+    <div class="co-check active">
+      <div class="chk on">✓</div>
+      <span class="co-check-text">この会社に資料請求する</span>
+    </div>
+  </div>
+</div>
+
+<!-- Company 2 -->
+<div class="co-card">
+  <div class="co-photo co-photo-2">
+    <div class="co-photo-placeholder">施工事例イメージ</div>
+    <span class="co-rank">2位</span>
+  </div>
+  <div class="co-body">
+    <h3 class="co-name">△△ハウス</h3>
+    <p class="co-area">📍 愛知県豊田市 / 三河エリア対応</p>
+    <div class="co-stars">
+      <span class="co-stars-label">マッチ度</span>
+      <div class="stars"><span class="s-on">★</span><span class="s-on">★</span><span class="s-on">★</span><span class="s-on">★</span><span class="s-off">★</span></div>
+    </div>
+    <div class="co-tags">
+      <span class="co-tag ct-bl">ZEH対応</span>
+      <span class="co-tag ct-gn">庭づくり</span>
+    </div>
+    <p class="co-desc">パッシブデザインと省エネ技術で光熱費を抑えながら快適に。庭と一体になった開放的な間取りが好評。</p>
+    <div class="co-voice">
+      <p class="co-voice-head">👤 お客様の声</p>
+      <p class="co-voice-text">「真冬でもエアコン1台で家中暖かく、光熱費が以前の半分以下になりました。」</p>
+    </div>
+    <div class="co-stats">
+      <span class="co-stat">🏠 施工実績 <b>年間24棟</b></span>
+      <span class="co-stat">📅 創業 <b>12年</b></span>
+    </div>
+    <div class="co-check active">
+      <div class="chk on">✓</div>
+      <span class="co-check-text">この会社に資料請求する</span>
+    </div>
+  </div>
+</div>
+
+<!-- Company 3 -->
+<div class="co-card">
+  <div class="co-photo co-photo-3">
+    <div class="co-photo-placeholder">施工事例イメージ</div>
+    <span class="co-rank">3位</span>
+  </div>
+  <div class="co-body">
+    <h3 class="co-name">□□建設</h3>
+    <p class="co-area">📍 愛知県一宮市 / 尾張西エリア対応</p>
+    <div class="co-stars">
+      <span class="co-stars-label">マッチ度</span>
+      <div class="stars"><span class="s-on">★</span><span class="s-on">★</span><span class="s-on">★</span><span class="s-on">★</span><span class="s-off">★</span></div>
+    </div>
+    <div class="co-tags">
+      <span class="co-tag ct-bl">耐震等級3</span>
+      <span class="co-tag ct-or">モダンデザイン</span>
+    </div>
+    <p class="co-desc">構造計算に基づく耐震等級3の安心設計と、シンプルモダンなデザインを両立。コスパにも定評あり。</p>
+    <div class="co-voice">
+      <p class="co-voice-head">👤 お客様の声</p>
+      <p class="co-voice-text">「予算内で性能もデザインも妥協せずに建てられました。担当の方の提案力が素晴らしかった。」</p>
+    </div>
+    <div class="co-stats">
+      <span class="co-stat">🏠 施工実績 <b>年間45棟</b></span>
+      <span class="co-stat">📅 創業 <b>25年</b></span>
+    </div>
+    <div class="co-check active">
+      <div class="chk on">✓</div>
+      <span class="co-check-text">この会社に資料請求する</span>
+    </div>
+  </div>
+</div>
+
+<!-- CTA after top 3 -->
+<a href="#form" class="cta-inline">📩 選んだ会社に無料で資料請求する</a>
+<p class="cta-hint">3社以上選んで、下のフォームへ</p>
+
+<!-- More button -->
+<button class="more-btn">＋ 他の会社も見る（あと5社）</button>
+
+<!-- Selection summary -->
+<div class="sel-bar ok">
+  <span class="sel-count">選択中 <span class="c-ok">3</span>社 ✅</span>
+  <span class="sel-note n-ok">最大10社まで選択可能</span>
+</div>
+
+<!-- CTA after selection -->
+<a href="#form" class="cta-inline" style="margin-top:14px;">📩 この3社に無料で資料請求する →</a>
+
+<!-- ===== KARUTE (moved above benefits) ===== -->
+<div class="karute-mini">
+  <div class="karute-mini-top">
+    <div class="karute-mini-ico">📋</div>
+    <p class="karute-mini-text">先ほどの<strong>あなたの家づくりプロフィール</strong>の<br>完全版がカルテ（PDF）で届きます</p>
+  </div>
+  <div class="karute-preview">
+    <div class="karute-preview-img">
+      <div class="karute-mock">
+        <div class="karute-mock-badge">SAMPLE</div>
+        <div class="karute-mock-header">
+          <span class="karute-mock-logo">🏠 イエマッチAI</span>
+          <span class="karute-mock-title">家づくりカルテ</span>
+        </div>
+        <div class="karute-mock-body">
+          <div class="karute-mock-chart"></div>
+          <div class="karute-mock-lines">
+            <div class="km-line"></div>
+            <div class="km-line"></div>
+            <div class="km-line"></div>
+            <div class="km-line"></div>
+            <div class="km-line"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ===== BENEFITS ===== -->
+<div class="bene-card">
+  <p class="bene-title">イエマッチAIから資料請求すると…</p>
+  <div class="bene-item">
+    <div class="bene-ico bi-1">💬</div>
+    <div class="bene-text">
+      <strong>初回面談がすぐ本題に入れる</strong>
+      <p>AIが聞き取った要望が届くので、展示場で一からヒアリングされる手間がなくなります</p>
+      <div class="bene-photo">
+        <div class="bene-photo-inner bp-1">写真エリア</div>
+        <span class="bene-photo-note">※ イメージ：打合せ風景</span>
+      </div>
+    </div>
+  </div>
+  <div class="bene-item">
+    <div class="bene-ico bi-2">👤</div>
+    <div class="bene-text">
+      <strong>ベテラン担当者が優先対応</strong>
+      <p>各社のトップ営業・ベテランがあなたの担当につきます</p>
+      <div class="bene-photo">
+        <div class="bene-photo-inner bp-2">写真エリア</div>
+        <span class="bene-photo-note">※ イメージ：営業担当者</span>
+      </div>
+    </div>
+  </div>
+  <div class="bene-item">
+    <div class="bene-ico bi-3">💡</div>
+    <div class="bene-text">
+      <strong>AI厳選のおすすめ会社もプラス</strong>
+      <p>マッチング結果に加え、注目工務店5社の情報も届きます</p>
+      <div class="bene-photo">
+        <div class="bene-photo-inner bp-3">写真エリア</div>
+        <span class="bene-photo-note">※ イメージ：おすすめ工務店</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ===== FORM ===== -->
+<div class="form-section" id="form">
+  <div class="form-card">
+    <h2 class="form-title">選んだ会社に資料請求する</h2>
+    <p class="form-sub">選択した3社に、あなたの情報が届きます</p>
+    <div class="form-free"><span>完全無料</span></div>
+
+    <div class="fg">
+      <label class="fl">お名前 <span class="req">必須</span></label>
+      <input class="fi" type="text" placeholder="山田 太郎">
+    </div>
+    <div class="fg">
+      <label class="fl">メールアドレス <span class="req">必須</span></label>
+      <input class="fi" type="email" placeholder="example@email.com">
+    </div>
+    <div class="fg">
+      <label class="fl">電話番号 <span class="req">必須</span></label>
+      <input class="fi" type="tel" placeholder="090-1234-5678">
+    </div>
+    <div class="fg">
+      <label class="fl">郵便番号 <span class="req">必須</span></label>
+      <div class="fi-row">
+        <input class="fi" type="text" placeholder="460-0008" style="flex:1;">
+        <span class="fi-auto">自動入力 →</span>
+      </div>
+    </div>
+    <div class="fg">
+      <label class="fl">都道府県 <span class="req">必須</span></label>
+      <div class="fi-select">
+        <input class="fi" type="text" value="愛知県" readonly>
+      </div>
+    </div>
+    <div class="fg">
+      <label class="fl">市区町村 <span class="req">必須</span></label>
+      <input class="fi" type="text" placeholder="名古屋市中区栄">
+    </div>
+    <div class="fg">
+      <label class="fl">番地・建物名 <span class="opt">任意</span></label>
+      <input class="fi" type="text" placeholder="1-2-3 〇〇マンション101号室">
+    </div>
+
+    <div class="form-agree">
+      <div class="form-agree-box"></div>
+      <span class="form-agree-text"><a href="#">利用規約</a>・<a href="#">プライバシーポリシー</a>に同意する</span>
+    </div>
+
+    <button class="form-submit">📩 選んだ会社に無料で資料請求する</button>
+    <p class="form-note">※ 30秒で完了。しつこい営業電話はありません。</p>
+  </div>
+</div>
+
+<div style="height:80px"></div>
+
+</div>
+
+<!-- Sticky CTA -->
+<div class="sticky">
+  <a href="#form">
+    <div class="sticky-info">
+      <p class="sticky-count"><span>3</span>社 選択中</p>
+      <p class="sticky-hint">選んだ会社に資料請求 →</p>
+    </div>
+    <button class="sticky-btn">無料で資料請求</button>
+  </a>
+</div>
+
+</div>
+
+</body>
+</html>
