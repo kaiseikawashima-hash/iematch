@@ -717,7 +717,7 @@ export default function ResultPage() {
                         gap: 3,
                       }}
                     >
-                      🏠 施工実績{" "}
+                      🏠{" "}
                       <b style={{ color: "#4A5C5E", fontWeight: 700 }}>
                         年間{builder.b5_annualBuilds}棟
                       </b>
@@ -733,9 +733,9 @@ export default function ResultPage() {
                         gap: 3,
                       }}
                     >
-                      📅 創業{" "}
+                      📅{" "}
                       <b style={{ color: "#4A5C5E", fontWeight: 700 }}>
-                        {builder.foundedYear}年（{yearsInBusiness}年）
+                        創業{yearsInBusiness}年
                       </b>
                     </span>
                   )}
