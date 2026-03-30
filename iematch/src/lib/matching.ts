@@ -27,21 +27,52 @@ function expandArea(area: string): readonly string[] {
   return [area];
 }
 
+// === 予算マッピング ===
+// 新Q7の建物予算値 → 旧工務店データの価格帯にマッピング
+const BUILDING_BUDGET_TO_RANGES: Record<string, string[]> = {
+  under_2000: ["under_2500"],
+  "2000_2500": ["under_2500"],
+  "2500_3000": ["2500_3500"],
+  "3000_3500": ["2500_3500", "3500_4500"],
+  "3500_4000": ["3500_4500"],
+  "4000_5000": ["3500_4500", "4500_5500"],
+  "5000_6500": ["4500_5500", "over_5500"],
+  over_6500: ["over_5500"],
+};
+
+// 新Q7の総予算値 → 旧工務店データの価格帯にマッピング（土地代を差し引いて推定）
+const TOTAL_BUDGET_TO_RANGES: Record<string, string[]> = {
+  under_4000: ["under_2500"],
+  "4000_5000": ["under_2500", "2500_3500"],
+  "5000_5500": ["2500_3500", "3500_4500"],
+  "5500_6000": ["3500_4500"],
+  "6000_7000": ["3500_4500", "4500_5500"],
+  "7000_8000": ["4500_5500", "over_5500"],
+  "8000_10000": ["over_5500"],
+  over_10000: ["over_5500"],
+};
+
 // === 第1段階: 必須フィルタ ===
 export function filterBuilders(answers: Answer[], builders: Builder[]): Builder[] {
   return builders.filter((b) => {
-    // Q7は配列（複数エリア）または文字列（レガシー）
-    const userAreas = getAnswerArray(answers, "Q7");
+    // Q4: エリアフィルタ
+    const userAreas = getAnswerArray(answers, "Q4");
     if (userAreas.length > 0) {
-      // 選択エリアを展開して、いずれかに工務店が対応しているかチェック
       const expandedAreas = userAreas.flatMap(expandArea);
       const hasMatch = expandedAreas.some((area) => b.b1_areas.includes(area));
       if (!hasMatch) return false;
     }
 
-    const userBudget = getAnswer(answers, "Q4");
-    if (userBudget && userBudget !== "undecided" && !b.b2_priceRanges.includes(userBudget)) {
-      return false;
+    // Q7: 予算フィルタ（Q6の土地状況に応じてマッピングを切り替え）
+    const userBudget = getAnswer(answers, "Q7");
+    if (userBudget) {
+      const landStatus = getAnswer(answers, "Q6");
+      const isTotal = landStatus === "searching" || landStatus === "not_started";
+      const mapping = isTotal ? TOTAL_BUDGET_TO_RANGES : BUILDING_BUDGET_TO_RANGES;
+      const matchRanges = mapping[userBudget] ?? [];
+      if (matchRanges.length > 0 && !matchRanges.some((r) => b.b2_priceRanges.includes(r))) {
+        return false;
+      }
     }
 
     return true;
@@ -49,30 +80,36 @@ export function filterBuilders(answers: Answer[], builders: Builder[]): Builder[
 }
 
 /**
- * 新しい画像タグ → 工務店データの旧スタイル値へのマッピング
- * 1つのタグが複数の旧スタイルに対応する場合がある
+ * 画像タグ → 工務店スタイル値へのマッピング（1:1対応）
  */
 const TAG_TO_BUILDER_STYLES: Record<string, string[]> = {
-  natural: ["natural_nordic", "natural_wood"],
-  modern: ["simple_modern", "monotone"],
-  simple: ["simple_modern", "white_clean", "hiraya"],
-  japanese: ["japanese_modern", "japanese"],
-  industrial: ["industrial", "cafe_vintage"],
-  luxury: ["resort", "colorful"],
+  // exterior
+  simple_modern: ["simple_modern"],
+  natural: ["natural"],
+  japanese: ["japanese"],
+  industrial: ["industrial"],
+  resort: ["resort"],
+  hiraya: ["hiraya"],
+  other: ["other"],
+  // interior
+  simple_clean: ["simple_clean"],
+  natural_wood: ["natural_wood"],
+  monotone: ["monotone"],
+  cafe_vintage: ["cafe_vintage"],
+  colorful: ["colorful"],
 };
 
 function builderHasTag(builderStyles: string[], tag: string): boolean {
-  const mapped = TAG_TO_BUILDER_STYLES[tag] ?? [];
+  const mapped = TAG_TO_BUILDER_STYLES[tag] ?? [tag];
   return mapped.some((s) => builderStyles.includes(s));
 }
 
 function builderBestMatchesTag(bestStyle: string, tag: string): boolean {
-  const mapped = TAG_TO_BUILDER_STYLES[tag] ?? [];
+  const mapped = TAG_TO_BUILDER_STYLES[tag] ?? [tag];
   return mapped.includes(bestStyle);
 }
 
 // === デザイン適合: 外観（18点満点）===
-// 画像選択から集計したタグカウントと工務店の得意タグを掛け合わせて加点
 function calcExteriorScore(userImageIds: string[], builder: Builder): number {
   const tagCounts = countTags(userImageIds);
   let score = 0;
@@ -88,7 +125,6 @@ function calcExteriorScore(userImageIds: string[], builder: Builder): number {
 }
 
 // === デザイン適合: 内装（12点満点）===
-// 画像選択から集計したタグカウントと工務店の得意タグを掛け合わせて加点
 function calcInteriorScore(userImageIds: string[], builder: Builder): number {
   const tagCounts = countTags(userImageIds);
   let score = 0;
@@ -166,14 +202,14 @@ function calcSpecScore(userSpecs: string[], builder: Builder): number {
 
 // === サービス適合: 土地サポート（6点）===
 function calcLandSupportScore(answers: Answer[], builder: Builder): number {
-  const q8 = getAnswer(answers, "Q8");
+  const q6 = getAnswer(answers, "Q6");
   const q9 = getAnswer(answers, "Q9");
 
-  if (q8 !== "searching" && q8 !== "not_started") return 0;
+  if (q6 !== "searching" && q6 !== "not_started") return 0;
   if (!builder.b5_services.includes("land_support")) return 0;
 
   if (q9 === "yes_please") return 6;
-  if (q9 === "both") return 4;
+  if (q9 === "info_wanted") return 4;
   return 0;
 }
 
@@ -183,7 +219,11 @@ function calcLifestyleServiceScore(answers: Answer[], builder: Builder): number 
   let score = 0;
 
   if (q11.includes("pet") && builder.b5_services.includes("pet_design")) score += 2;
-  if (q11.includes("hobby_room") && builder.b5_services.includes("hobby_room_design")) score += 2;
+  if (
+    (q11.includes("entertainment") || q11.includes("diy")) &&
+    builder.b5_services.includes("hobby_room_design")
+  )
+    score += 2;
 
   return Math.min(score, 4);
 }
@@ -193,13 +233,18 @@ function calcBonusScore(answers: Answer[], builder: Builder): number {
   let score = 0;
 
   // 予算一致ボーナス (+4)
-  const userBudget = getAnswer(answers, "Q4");
-  if (userBudget && userBudget !== "undecided" && userBudget === builder.b2_mainPriceRange) {
-    score += 4;
+  const userBudget = getAnswer(answers, "Q7");
+  const landStatus = getAnswer(answers, "Q6");
+  if (userBudget) {
+    const isTotal = landStatus === "searching" || landStatus === "not_started";
+    const mapping = isTotal ? TOTAL_BUDGET_TO_RANGES : BUILDING_BUDGET_TO_RANGES;
+    const matchRanges = mapping[userBudget] ?? [];
+    if (matchRanges.includes(builder.b2_mainPriceRange)) {
+      score += 4;
+    }
   }
 
   // デザイン一致ボーナス (+3)
-  // 選択画像のタグで最も多いものがbestStyleと一致すれば加点
   const q13 = getAnswerArray(answers, "Q13");
   const q13Tags = countTags(q13);
   const topTag = Object.entries(q13Tags).sort((a, b) => b[1] - a[1])[0];
@@ -263,16 +308,16 @@ function generateReasonText(answers: Answer[], builder: Builder): string {
     after_service: "アフターサービス",
     track_record: "施工実績",
     land_support: "土地探しサポート",
-    custom_design: "自由設計",
+    lifestyle: "暮らし提案力",
   };
 
   const styleTagLabels: Record<string, string> = {
+    simple_modern: "シンプルモダン",
     natural: "ナチュラル",
-    modern: "モダン",
-    simple: "シンプル",
     japanese: "和テイスト",
     industrial: "インダストリアル",
-    luxury: "ラグジュアリー",
+    resort: "リゾート",
+    hiraya: "平屋",
   };
 
   const parts: string[] = [];
@@ -306,8 +351,8 @@ function generateReasonText(answers: Answer[], builder: Builder): string {
 // === 第4段階: 上位3社選出 ===
 export function getRecommendations(answers: Answer[], builders: Builder[]): Recommendation[] {
   const filtered = filterBuilders(answers, builders);
-  const q8 = getAnswer(answers, "Q8");
-  const hasLandQuestion = q8 === "searching" || q8 === "not_started";
+  const q6 = getAnswer(answers, "Q6");
+  const hasLandQuestion = q6 === "searching" || q6 === "not_started";
 
   const scored = filtered.map((builder) => {
     const rawScore = calculateMatchScore(answers, builder);
@@ -322,12 +367,10 @@ export function getRecommendations(answers: Answer[], builders: Builder[]): Reco
     };
   });
 
-  // ソート: マッチ度降順 → 同率なら素点降順
   const sorted = scored.sort((a, b) => {
     if (b.displayMatchRate !== a.displayMatchRate) return b.displayMatchRate - a.displayMatchRate;
     return b.rawScore - a.rawScore;
   });
 
-  // スコア降順で全件返す（絞り込みは呼び出し側で行う）
   return sorted;
 }

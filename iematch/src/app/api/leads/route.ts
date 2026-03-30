@@ -78,8 +78,8 @@ async function sendEmails(body: {
   const builderNames = await resolveBuilderNames(body.builderIds ?? []);
   const answers = body.answers ?? {};
 
-  const budgetLabel = getAnswerLabel("Q4", answers["Q4"]);
-  const areaLabel = getAnswerLabel("Q7", answers["Q7"]);
+  const budgetLabel = getAnswerLabel("Q7", answers["Q7"]);
+  const areaLabel = getAnswerLabel("Q4", answers["Q4"]);
   const performanceLabel = getAnswerLabel("Q15", answers["Q15"]);
   const companyLabel = getAnswerLabel("Q17", answers["Q17"]);
 

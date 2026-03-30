@@ -22,6 +22,8 @@ export type QuestionOption = {
   label: string;
   imageUrl?: string;
   tag?: string;
+  textInputPlaceholder?: string;
+  textInputLabel?: string;
 };
 
 export type Question = {
@@ -38,6 +40,13 @@ export type Question = {
     dependsOn: string;
     showWhen: string[];
   };
+  variants?: {
+    dependsOn: string;
+    when: string[];
+    text: string;
+    subText?: string;
+    options: QuestionOption[];
+  }[];
 };
 
 // === 回答データ ===

@@ -27,23 +27,23 @@ type TestCase = {
 };
 
 const testCases: readonly TestCase[] = [
-  // ケースA: Aさん — 性能エキスパート型（Appendix A準拠）
+  // ケースA: 性能エキスパート型
   {
     name: "ケースA",
-    description: "Aさん（性能エキスパート型 × デザインファースト型）",
+    description: "性能エキスパート型（デザインも重視）",
     answers: [
-      { questionId: "Q4", value: "3500_4500" },
-      { questionId: "Q7", value: ["名古屋市"] },
-      { questionId: "Q8", value: "searching" },
+      { questionId: "Q4", value: ["名古屋市"] },
+      { questionId: "Q6", value: "searching" },
       { questionId: "Q9", value: "yes_please" },
-      { questionId: "Q11", value: ["housework", "family_living", "pet"] },
-      { questionId: "Q12", value: ["layout", "insulation", "storage"] },
-      { questionId: "Q13", value: ["simple_modern", "natural_nordic"] },
-      { questionId: "Q14", value: ["natural_wood", "white_clean"] },
+      { questionId: "Q7", value: "5000_5500" },
+      { questionId: "Q11", value: ["easy_housework", "family_relax", "pet"] },
+      { questionId: "Q12", value: ["compact_laundry", "whole_house_ac_equip", "entrance_storage"] },
+      { questionId: "Q13", value: ["exterior_simple_modern_1", "exterior_natural_1"] },
+      { questionId: "Q14", value: ["interior_natural_wood_1", "interior_simple_clean_1"] },
       { questionId: "Q15", value: ["insulation", "seismic", "airtight"], rank: ["insulation", "seismic", "airtight"] },
       { questionId: "Q16", value: ["zeh", "long_quality"] },
       { questionId: "Q17", value: ["design", "performance", "cost"], rank: ["design", "performance", "cost"] },
-      { questionId: "Q18", value: "company_choice" },
+      { questionId: "Q18", value: "trust" },
       { questionId: "Q19", value: ["listening", "proposal"] },
     ],
     expect: {
@@ -52,26 +52,22 @@ const testCases: readonly TestCase[] = [
     },
   },
 
-  // ケースB: 全部「こだわりなし」系 — トータルバランス型になるか確認
-  // Q8=owned → Q9スキップ、Q13/Q14を3つずつ選択で分散、Q15=[maintenance], Q16=[none]
-  // Q17=[performance, personality, land_support] で各タイプに分散
-  // Q18=process, Q19=response でさらにtotalBalance/costBalance加点
-  // 結果: maxDiff=5 ≤ 8 → totalBalance判定
+  // ケースB: トータルバランス型（こだわり分散）
   {
     name: "ケースB",
-    description: "全部「こだわりなし」系（トータルバランス型エッジケース）",
+    description: "こだわり分散（トータルバランス型エッジケース）",
     answers: [
-      { questionId: "Q4", value: "undecided" },
-      { questionId: "Q7", value: ["名古屋市"] },
-      { questionId: "Q8", value: "owned" },
-      { questionId: "Q11", value: ["storage"] },
-      { questionId: "Q12", value: ["rent"] },
-      { questionId: "Q13", value: ["simple_modern", "natural_nordic", "japanese_modern"] },
-      { questionId: "Q14", value: ["white_clean", "natural_wood", "monotone"] },
+      { questionId: "Q4", value: ["名古屋市"] },
+      { questionId: "Q6", value: "has_land" },
+      { questionId: "Q7", value: "3500_4000" },
+      { questionId: "Q11", value: ["organized_storage"] },
+      { questionId: "Q12", value: ["room_storage"] },
+      { questionId: "Q13", value: ["exterior_simple_modern_1", "exterior_natural_1", "exterior_japanese_1"] },
+      { questionId: "Q14", value: ["interior_simple_clean_1", "interior_natural_wood_1", "interior_monotone_1"] },
       { questionId: "Q15", value: ["maintenance"], rank: ["maintenance"] },
       { questionId: "Q16", value: ["none"] },
       { questionId: "Q17", value: ["performance", "personality", "land_support"], rank: ["performance", "personality", "land_support"] },
-      { questionId: "Q18", value: "process" },
+      { questionId: "Q18", value: "process_unknown" },
       { questionId: "Q19", value: ["response"] },
     ],
     expect: {
@@ -81,32 +77,21 @@ const testCases: readonly TestCase[] = [
   },
 
   // ケースC: デザインファースト型
-  // ※ 要件定義の選択肢に存在する値のみ使用
-  //   - Q11: hobby_room(designFirst+2), outdoor_living(designFirst+3) でデザイン加点を積む
-  //   - Q12: sunlight(lifestyleDesign+2,performanceExpert+1) を使用
-  //   - Q13: [resort, japanese_modern] → designFirst+5（2つ選択）
-  //   - Q14: [natural_wood, cafe_vintage] → designFirst+4（2つ選択）
-  //   - Q15: [none] → totalBalance+3（性能こだわりなし）
-  //   - Q16: [none] → totalBalance+2
-  //   - Q17: [design(+8), custom_design(lifestyleDesign+3,designFirst+1), personality(trustPartner+2)]
-  //   - Q18: image → designFirst+3
-  //   - Q19: proposal → designFirst+3, performanceExpert+2
   {
     name: "ケースC",
     description: "デザインファースト型",
     answers: [
-      { questionId: "Q4", value: "4500_5500" },
-      { questionId: "Q7", value: ["名古屋市"] },
-      { questionId: "Q8", value: "owned" },
-      // Q9はスキップ
-      { questionId: "Q11", value: ["hobby_room", "outdoor_living"] },
-      { questionId: "Q12", value: ["layout", "sunlight"] },
-      { questionId: "Q13", value: ["resort", "japanese_modern"] },
-      { questionId: "Q14", value: ["natural_wood", "cafe_vintage"] },
+      { questionId: "Q4", value: ["名古屋市"] },
+      { questionId: "Q6", value: "has_land" },
+      { questionId: "Q7", value: "5000_6500" },
+      { questionId: "Q11", value: ["gardening", "favorite_interior"] },
+      { questionId: "Q12", value: ["high_ceiling", "garden_outdoor"] },
+      { questionId: "Q13", value: ["exterior_resort_1", "exterior_japanese_1"] },
+      { questionId: "Q14", value: ["interior_natural_wood_1", "interior_cafe_vintage_1"] },
       { questionId: "Q15", value: ["none"], rank: ["none"] },
       { questionId: "Q16", value: ["none"] },
-      { questionId: "Q17", value: ["design", "custom_design", "personality"], rank: ["design", "custom_design", "personality"] },
-      { questionId: "Q18", value: "image" },
+      { questionId: "Q17", value: ["design", "lifestyle", "personality"], rank: ["design", "lifestyle", "personality"] },
+      { questionId: "Q18", value: "design_fit" },
       { questionId: "Q19", value: ["proposal"] },
     ],
     expect: {
@@ -116,23 +101,21 @@ const testCases: readonly TestCase[] = [
   },
 
   // ケースD: エリア不一致（0社表示）
-  // ※ Q7=豊根村 → 30社のどのb1_areasにも含まれていないため全社フィルタ落ち
-  // ※ エラーにならず0社で正常終了することを確認
   {
     name: "ケースD",
     description: "エリア不一致（0社表示・エラーにならないことを確認）",
     answers: [
-      { questionId: "Q4", value: "3500_4500" },
-      { questionId: "Q7", value: ["豊根村"] },
-      { questionId: "Q8", value: "owned" },
-      { questionId: "Q11", value: ["family_living"] },
-      { questionId: "Q12", value: ["insulation"] },
-      { questionId: "Q13", value: ["simple_modern"] },
-      { questionId: "Q14", value: ["white_clean"] },
+      { questionId: "Q4", value: ["豊根村"] },
+      { questionId: "Q6", value: "has_land" },
+      { questionId: "Q7", value: "3500_4000" },
+      { questionId: "Q11", value: ["family_relax"] },
+      { questionId: "Q12", value: ["whole_house_ac_equip"] },
+      { questionId: "Q13", value: ["exterior_simple_modern_1"] },
+      { questionId: "Q14", value: ["interior_simple_clean_1"] },
       { questionId: "Q15", value: ["insulation"], rank: ["insulation"] },
       { questionId: "Q16", value: ["zeh"] },
       { questionId: "Q17", value: ["design", "performance", "cost"], rank: ["design", "performance", "cost"] },
-      { questionId: "Q18", value: "money" },
+      { questionId: "Q18", value: "budget_over" },
       { questionId: "Q19", value: ["listening"] },
     ],
     expect: {
@@ -162,7 +145,6 @@ function runTestCase(tc: TestCase): { checks: CheckResult[]; allPassed: boolean 
 
   const checks: CheckResult[] = [];
 
-  // メインタイプ
   if (tc.expect.mainType !== undefined) {
     checks.push({
       name: "メインタイプ",
@@ -172,7 +154,6 @@ function runTestCase(tc: TestCase): { checks: CheckResult[]; allPassed: boolean 
     });
   }
 
-  // サブタイプ
   if (tc.expect.subType !== undefined) {
     checks.push({
       name: "サブタイプ",
@@ -182,7 +163,6 @@ function runTestCase(tc: TestCase): { checks: CheckResult[]; allPassed: boolean 
     });
   }
 
-  // 表示ラベル
   if (tc.expect.displayLabel !== undefined) {
     checks.push({
       name: "表示ラベル",
@@ -192,7 +172,6 @@ function runTestCase(tc: TestCase): { checks: CheckResult[]; allPassed: boolean 
     });
   }
 
-  // 個別スコア
   if (tc.expect.scores) {
     for (const [type, expectedScore] of Object.entries(tc.expect.scores)) {
       checks.push({
@@ -204,7 +183,6 @@ function runTestCase(tc: TestCase): { checks: CheckResult[]; allPassed: boolean 
     }
   }
 
-  // 最小おすすめ数
   if (tc.expect.minRecommendations !== undefined) {
     checks.push({
       name: `おすすめ${tc.expect.minRecommendations}社以上`,
@@ -214,7 +192,6 @@ function runTestCase(tc: TestCase): { checks: CheckResult[]; allPassed: boolean 
     });
   }
 
-  // 最大おすすめ数
   if (tc.expect.maxRecommendations !== undefined) {
     checks.push({
       name: `おすすめ${tc.expect.maxRecommendations}社以下`,
@@ -226,12 +203,10 @@ function runTestCase(tc: TestCase): { checks: CheckResult[]; allPassed: boolean 
 
   const allPassed = checks.every((c) => c.pass);
 
-  // --- 出力 ---
   console.log(`\n${"=".repeat(56)}`);
   console.log(`  ${tc.name}: ${tc.description}`);
   console.log(`${"=".repeat(56)}`);
 
-  // タイプスコア一覧
   const sortedScores = Object.entries(typeScores)
     .sort(([, a], [, b]) => (b as number) - (a as number)) as [TypeName, number][];
   console.log(`\n  タイプスコア一覧`);
@@ -240,13 +215,11 @@ function runTestCase(tc: TestCase): { checks: CheckResult[]; allPassed: boolean 
     console.log(`  ${type.padEnd(20)} ${String(score).padStart(3)}点${marker}`);
   }
 
-  // メイン/サブ/ラベル
   console.log(`\n  メインタイプ: ${main}`);
   console.log(`  サブタイプ:   ${sub}`);
   console.log(`  表示ラベル:   ${displayLabel}`);
   console.log(`  レーダー:     ${JSON.stringify(radar)}`);
 
-  // マッチング
   console.log(`\n  フィルタ通過: ${filtered.length}社 / 全${builders.length}社`);
   if (recommendations.length === 0) {
     console.log(`  マッチング:   該当0社`);
@@ -259,7 +232,6 @@ function runTestCase(tc: TestCase): { checks: CheckResult[]; allPassed: boolean 
     }
   }
 
-  // 照合結果
   console.log(`\n  照合結果:`);
   for (const c of checks) {
     const icon = c.pass ? "\u2705" : "\u274C";
@@ -292,7 +264,6 @@ for (const tc of testCases) {
   }
 }
 
-// サマリー
 console.log(`\n${"#".repeat(56)}`);
 console.log(`  総合結果: ${totalPassed}/${testCases.length} ケース PASS`);
 if (totalFailed > 0) {

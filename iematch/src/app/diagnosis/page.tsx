@@ -2,7 +2,7 @@
 
 import { useState, useCallback, useMemo, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
-import { Answer, FamilyData } from "@/types";
+import { Answer, FamilyData, Question } from "@/types";
 import { questions as baseQuestions } from "@/data/questions";
 import { getImages, applyImageOverrides } from "@/lib/getImages";
 import { Header } from "@/components/layout/Header";
@@ -37,14 +37,34 @@ function shuffleImageOptions<T extends { id: string; type: string; options: read
 }
 
 // インサイト表示対象の質問ID
-const INSIGHT_TRIGGER_IDS = new Set(["Q6", "Q14", "Q19"]);
+// 介入①: Q8回答後, 介入②: Q14回答後, 介入③: Q19回答後
+const INSIGHT_TRIGGER_IDS = new Set(["Q8", "Q14", "Q19"]);
 
 // 先行呼び出しマップ: この質問の回答選択時に次のトリガーのinsightを先行取得
 const PREFETCH_MAP: Record<string, { triggerId: string; category: string }> = {
-  Q5:  { triggerId: "Q6",  category: "予算・資金計画" },
+  Q7:  { triggerId: "Q8",  category: "予算・資金計画" },
   Q13: { triggerId: "Q14", category: "デザインの好み" },
-  Q18: { triggerId: "Q19", category: "会社選びの軸" },
+  Q18: { triggerId: "Q19", category: "会社選びの基準" },
 };
+
+// variantsを考慮して現在の質問テキスト・optionsを解決する
+function resolveQuestion(question: Question, answers: Answer[]): { text: string; subText?: string; options: typeof question.options } {
+  if (!question.variants) {
+    return { text: question.text, subText: question.subText, options: question.options };
+  }
+
+  for (const variant of question.variants) {
+    const dep = answers.find((a) => a.questionId === variant.dependsOn);
+    if (dep) {
+      const depValue = typeof dep.value === "string" ? dep.value : "";
+      if (variant.when.includes(depValue)) {
+        return { text: variant.text, subText: variant.subText, options: variant.options };
+      }
+    }
+  }
+
+  return { text: question.text, subText: question.subText, options: question.options };
+}
 
 // 条件分岐を考慮した表示質問リストを算出
 function getVisibleQuestions(answers: Answer[], questions: typeof baseQuestions) {
@@ -137,7 +157,7 @@ export default function DiagnosisPage() {
   const [family, setFamily] = useState<FamilyData>({
     adults: 2,
     children: 1,
-    futurePlan: "same",
+    futurePlan: "increase",
   });
 
   // エリア用ステート（複数選択）
@@ -146,9 +166,18 @@ export default function DiagnosisPage() {
   const [prefecture, setPrefecture] = useState("");
   const [city, setCity] = useState("");
 
+  // Q6のテキスト入力用ステート
+  const [landLocationText, setLandLocationText] = useState("");
+
   const visibleQuestions = useMemo(() => getVisibleQuestions(answers, questions), [answers, questions]);
   const currentQuestion = visibleQuestions[currentIndex];
-  const totalCategories = 7;
+  const totalCategories = 6;
+
+  // variantsを解決した現在の質問
+  const resolved = useMemo(
+    () => (currentQuestion ? resolveQuestion(currentQuestion, answers) : null),
+    [currentQuestion, answers]
+  );
 
   // 現在の回答を取得
   const currentAnswer = useMemo(
@@ -165,13 +194,13 @@ export default function DiagnosisPage() {
           { questionId, value, rank },
         ];
 
-        // Q5/Q13/Q18 回答時 → 次のトリガーのinsightを先行取得
+        // 先行取得チェック
         const prefetchTarget = PREFETCH_MAP[questionId];
         if (prefetchTarget) {
           prefetchInsight(updated, prefetchTarget.category, prefetchTarget.triggerId);
         }
 
-        // Q6/Q14/Q19 回答時 → 完全なデータでinsightを先行取得（上書き）
+        // トリガーIDの場合も先行取得（完全なデータで上書き）
         if (INSIGHT_TRIGGER_IDS.has(questionId)) {
           const q = questions.find((qq) => qq.id === questionId);
           if (q) {
@@ -202,7 +231,6 @@ export default function DiagnosisPage() {
         ? currentAnswer.value
         : [];
 
-      // "none" 系の排他処理
       if (value === "none") {
         updateAnswer(currentQuestion.id, ["none"]);
         return;
@@ -223,7 +251,6 @@ export default function DiagnosisPage() {
       if (!currentQuestion) return;
       const currentRank = currentAnswer?.rank ?? [];
 
-      // "none" の排他処理
       if (value === "none") {
         updateAnswer(currentQuestion.id, ["none"], ["none"]);
         return;
@@ -296,7 +323,6 @@ export default function DiagnosisPage() {
       setShowInsight(true);
       setInsightTriggerId(triggerId);
 
-      // キャッシュされた先行取得結果があるか確認
       const cached = insightCacheRef.current;
       if (cached && cached.triggerId === triggerId) {
         insightCacheRef.current = null;
@@ -314,7 +340,6 @@ export default function DiagnosisPage() {
         }
       }
 
-      // キャッシュなし or 失敗 → 通常のAPI呼び出し
       setInsightLoading(true);
       setInsightText(null);
       try {
@@ -330,12 +355,10 @@ export default function DiagnosisPage() {
         if (data.insight) {
           setInsightText(data.insight);
         } else {
-          // API未設定 or エラー → スキップして次へ
           setShowInsight(false);
           setCurrentIndex((prev) => prev + 1);
         }
       } catch {
-        // ネットワークエラー → スキップして次へ
         setShowInsight(false);
         setCurrentIndex((prev) => prev + 1);
       } finally {
@@ -345,7 +368,7 @@ export default function DiagnosisPage() {
     []
   );
 
-  // インサイト画面を閉じて次へ（最後の質問なら結果画面へ）
+  // インサイト画面を閉じて次へ
   const handleInsightDismiss = useCallback(() => {
     setShowInsight(false);
     setInsightText(null);
@@ -387,7 +410,7 @@ export default function DiagnosisPage() {
   const handleNext = useCallback(() => {
     if (!currentQuestion || !canProceed) return;
 
-    // area の場合、回答を保存（複数選択 → 配列）
+    // area の場合、回答を保存
     if (currentQuestion.type === "area" && selectedAreas.length > 0) {
       updateAnswer(currentQuestion.id, selectedAreas);
     }
@@ -406,7 +429,6 @@ export default function DiagnosisPage() {
       ]);
     }
 
-    // 最後の質問なら結果画面へ
     const buildAnswersForNavigation = () => {
       if (currentQuestion.type === "area") {
         return [...answers.filter((a) => a.questionId !== currentQuestion.id), { questionId: currentQuestion.id, value: selectedAreas }];
@@ -417,7 +439,7 @@ export default function DiagnosisPage() {
       return answers;
     };
 
-    // インサイト対象の質問ならGeminiに問い合わせ（最終質問でも表示）
+    // インサイト対象の質問ならGeminiに問い合わせ
     if (INSIGHT_TRIGGER_IDS.has(currentQuestion.id)) {
       fetchInsight(buildAnswersForNavigation(), currentQuestion.categoryLabel, currentQuestion.id);
       return;
@@ -426,7 +448,6 @@ export default function DiagnosisPage() {
     const nextVisibleQuestions = getVisibleQuestions(buildAnswersForNavigation(), questions);
 
     if (currentIndex >= nextVisibleQuestions.length - 1) {
-      // 回答データをsessionStorageに保存して結果画面へ
       const finalAnswers = currentQuestion.type === "area"
         ? [...answers.filter((a) => a.questionId !== currentQuestion.id), { questionId: currentQuestion.id, value: selectedAreas }]
         : currentQuestion.type === "cascade"
@@ -452,7 +473,7 @@ export default function DiagnosisPage() {
     }
 
     setCurrentIndex((prev) => prev + 1);
-  }, [currentQuestion, canProceed, currentIndex, answers, selectedAreas, city, family, updateAnswer, router, fetchInsight, corrections]);
+  }, [currentQuestion, canProceed, currentIndex, answers, selectedAreas, city, family, updateAnswer, router, fetchInsight, corrections, questions]);
 
   // 戻る
   const handleBack = useCallback(() => {
@@ -461,7 +482,7 @@ export default function DiagnosisPage() {
     }
   }, [currentIndex]);
 
-  if (!currentQuestion) return null;
+  if (!currentQuestion || !resolved) return null;
 
   // インサイト画面表示中
   if (showInsight) {
@@ -518,6 +539,10 @@ export default function DiagnosisPage() {
     );
   }
 
+  // Q6で選択されたオプションにtextInputPlaceholderがあるかチェック
+  const selectedOption = resolved.options.find((o) => o.value === selectedSingle);
+  const showTextInput = selectedOption?.textInputPlaceholder != null;
+
   return (
     <div className="flex min-h-screen flex-col" style={{ background: "#FEFCF9" }}>
       <Header />
@@ -533,27 +558,44 @@ export default function DiagnosisPage() {
 
         <div className="mb-6">
           <h2 className="text-lg font-bold leading-relaxed">
-            {currentQuestion.text}
+            {resolved.text}
           </h2>
-          {currentQuestion.subText && (
+          {resolved.subText && (
             <p className="mt-1 text-xs text-muted-foreground">
-              {currentQuestion.subText}
+              {resolved.subText}
             </p>
           )}
         </div>
 
         {/* 質問タイプごとのコンポーネント */}
         {currentQuestion.type === "single" && (
-          <SingleSelectCard
-            options={currentQuestion.options}
-            selected={selectedSingle}
-            onSelect={handleSingleSelect}
-          />
+          <>
+            <SingleSelectCard
+              options={resolved.options}
+              selected={selectedSingle}
+              onSelect={handleSingleSelect}
+            />
+            {/* テキスト入力サブフィールド（Q6の「土地がある」選択時） */}
+            {showTextInput && (
+              <div className="mt-4">
+                <label className="mb-1 block text-sm font-medium text-gray-700">
+                  {selectedOption?.textInputLabel ?? ""}
+                </label>
+                <input
+                  type="text"
+                  value={landLocationText}
+                  onChange={(e) => setLandLocationText(e.target.value)}
+                  placeholder={selectedOption?.textInputPlaceholder}
+                  className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-brand focus:outline-none focus:ring-1 focus:ring-brand"
+                />
+              </div>
+            )}
+          </>
         )}
 
         {currentQuestion.type === "multi" && (
           <MultiSelectCard
-            options={currentQuestion.options}
+            options={resolved.options}
             selected={selectedArray}
             maxSelect={currentQuestion.maxSelect}
             onToggle={handleMultiToggle}
@@ -562,7 +604,7 @@ export default function DiagnosisPage() {
 
         {currentQuestion.type === "image" && (
           <ImageSelectCard
-            options={currentQuestion.options}
+            options={resolved.options}
             selected={selectedArray}
             minSelect={currentQuestion.minSelect}
             maxSelect={currentQuestion.maxSelect}
@@ -572,7 +614,7 @@ export default function DiagnosisPage() {
 
         {currentQuestion.type === "ranked" && (
           <RankedSelectCard
-            options={currentQuestion.options}
+            options={resolved.options}
             ranked={rankedValues}
             maxSelect={currentQuestion.maxSelect ?? 3}
             onSelect={handleRankedSelect}
@@ -599,7 +641,7 @@ export default function DiagnosisPage() {
         {currentQuestion.type === "family" && (
           <FamilyInput
             family={family}
-            futurePlanOptions={currentQuestion.options}
+            futurePlanOptions={resolved.options}
             onChange={setFamily}
           />
         )}
