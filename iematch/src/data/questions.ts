@@ -195,7 +195,7 @@ export const questions: Question[] = [
       value: img.id,
       label: img.label,
       tag: img.tag,
-      imageUrl: img.fallback,
+      imageUrl: img.src,
     })),
   },
   {
@@ -211,7 +211,7 @@ export const questions: Question[] = [
       value: img.id,
       label: img.label,
       tag: img.tag,
-      imageUrl: img.fallback,
+      imageUrl: img.src,
     })),
   },
 
