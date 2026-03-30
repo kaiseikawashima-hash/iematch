@@ -8,28 +8,34 @@ export default function AichiPage() {
   const router = useRouter();
 
   return (
-    <div className="flex min-h-screen flex-col" style={{ background: "#F5F4F0" }}>
+    <div className="flex min-h-screen flex-col" style={{ background: "#FEFCF9" }}>
       <Header />
 
       {/* ヒーローセクション */}
-      <section className="px-4 pb-12 pt-16 text-center" style={{ background: "#F5F4F0" }}>
-        <h1 className="text-2xl font-bold leading-relaxed tracking-tight sm:text-3xl">
+      <section
+        className="px-4 pb-12 pt-16 text-center text-white"
+        style={{ background: "linear-gradient(135deg, #2ABFA4 0%, #167A66 100%)" }}
+      >
+        <h1
+          className="text-2xl font-bold leading-relaxed tracking-tight sm:text-3xl"
+          style={{ fontFamily: "'Zen Maru Gothic', sans-serif" }}
+        >
           愛知県で家を建てるなら、
           <br />
-          あなたに合った<span className="text-brand">工務店</span>を。
+          あなたに合った工務店を。
         </h1>
-        <p className="mx-auto mt-3 max-w-sm text-sm leading-relaxed" style={{ color: "#666666" }}>
+        <p className="mx-auto mt-3 max-w-sm text-sm leading-relaxed text-white/85">
           愛知県内の優良工務店30社から、AIがあなただけの最適な会社をご提案。無料・3分で完了します。
         </p>
         <button
           type="button"
           onClick={() => router.push("/diagnosis")}
-          className="mt-6 rounded-full px-8 py-4 text-base font-bold text-white shadow-lg transition-all hover:shadow-xl"
-          style={{ background: "#2E5240" }}
+          className="mt-6 rounded-full px-8 py-4 text-base font-bold text-white shadow-lg transition-all hover:shadow-xl hover:brightness-110"
+          style={{ background: "#FF9F43" }}
         >
-          無料で診断スタート
+          無料で診断スタート →
         </button>
-        <p className="mt-2 text-xs text-muted-foreground">
+        <p className="mt-2 text-xs text-white/70">
           約5分 ・ 完全無料 ・ 営業電話なし
         </p>
       </section>
@@ -44,19 +50,19 @@ export default function AichiPage() {
         >
           <polygon
             points="60,10 140,10 170,40 175,80 160,120 130,150 100,160 70,150 40,120 25,80 30,40"
-            fill="#E8F0EB"
-            stroke="#2E5240"
+            fill="#E8FBF6"
+            stroke="#2ABFA4"
             strokeWidth="2"
           />
-          <text x="100" y="90" textAnchor="middle" fill="#2E5240" fontSize="14" fontWeight="bold">愛知県</text>
+          <text x="100" y="90" textAnchor="middle" fill="#1D9980" fontSize="14" fontWeight="bold">愛知県</text>
         </svg>
-        <p className="text-sm mt-2" style={{color: '#2E5240'}}>対応エリア：愛知県全域</p>
+        <p className="text-sm mt-2" style={{ color: "#1D9980" }}>対応エリア：愛知県全域</p>
       </div>
 
       {/* 課題訴求セクション */}
       <section className="px-4 py-12">
         <div className="mx-auto max-w-lg">
-          <h2 className="text-center text-base font-bold">
+          <h2 className="text-center text-base font-bold" style={{ color: "#1A2B2E" }}>
             こんなお悩み、ありませんか？
           </h2>
           <div className="mt-6 grid grid-cols-1 gap-3 sm:grid-cols-2">
@@ -68,10 +74,10 @@ export default function AichiPage() {
             ].map((text) => (
               <div
                 key={text}
-                className="flex items-center rounded-xl bg-white px-4 py-3"
-                style={{ borderLeft: "3px solid #2E5240", border: "1px solid #DEDBD4", borderLeftWidth: "3px", borderLeftColor: "#2E5240" }}
+                className="flex items-center rounded-2xl bg-white px-4 py-3 shadow-sm"
+                style={{ borderLeft: "3px solid #2ABFA4" }}
               >
-                <span className="text-sm">{text}</span>
+                <span className="text-sm" style={{ color: "#1A2B2E" }}>{text}</span>
               </div>
             ))}
           </div>
@@ -79,9 +85,9 @@ export default function AichiPage() {
       </section>
 
       {/* 使い方セクション */}
-      <section className="px-4 py-12" style={{ background: "#EAF0EC" }}>
+      <section className="px-4 py-12" style={{ background: "#E8FBF6" }}>
         <div className="mx-auto max-w-lg">
-          <h2 className="text-center text-base font-bold">
+          <h2 className="text-center text-base font-bold" style={{ color: "#1A2B2E" }}>
             かんたん3ステップ
           </h2>
           <div className="mt-6 space-y-4">
@@ -104,18 +110,17 @@ export default function AichiPage() {
             ].map(({ step, title, desc }) => (
               <div
                 key={step}
-                className="flex items-start gap-4 rounded-xl bg-white p-4 shadow-sm"
-                style={{ border: "1px solid #DEDBD4" }}
+                className="flex items-start gap-4 rounded-2xl bg-white p-4 shadow-sm"
               >
                 <span
                   className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-sm font-bold text-white"
-                  style={{ background: "#2E5240" }}
+                  style={{ background: "#2ABFA4" }}
                 >
                   {step}
                 </span>
                 <div>
-                  <p className="text-sm font-bold">{title}</p>
-                  <p className="mt-0.5 text-xs" style={{ color: "#666666" }}>{desc}</p>
+                  <p className="text-sm font-bold" style={{ color: "#1A2B2E" }}>{title}</p>
+                  <p className="mt-0.5 text-xs" style={{ color: "#4A5C5E" }}>{desc}</p>
                 </div>
               </div>
             ))}
@@ -133,22 +138,22 @@ export default function AichiPage() {
             { value: "0", label: "営業電話", unit: "件" },
           ].map(({ value, label, unit }) => (
             <div key={label} className="text-center">
-              <p className="text-3xl font-bold text-brand">
+              <p className="text-3xl font-bold" style={{ color: "#2ABFA4" }}>
                 {value}
-                <span className="text-sm font-normal text-muted-foreground">
+                <span className="text-sm font-normal" style={{ color: "#4A5C5E" }}>
                   {unit}
                 </span>
               </p>
-              <p className="mt-1 text-xs text-muted-foreground">{label}</p>
+              <p className="mt-1 text-xs" style={{ color: "#4A5C5E" }}>{label}</p>
             </div>
           ))}
         </div>
       </section>
 
       {/* 選ばれる理由セクション */}
-      <section className="px-4 py-12" style={{ background: "#EAF0EC" }}>
+      <section className="px-4 py-12" style={{ background: "#E8FBF6" }}>
         <div className="mx-auto max-w-lg">
-          <h2 className="text-center text-base font-bold">選ばれる4つの理由</h2>
+          <h2 className="text-center text-base font-bold" style={{ color: "#1A2B2E" }}>選ばれる4つの理由</h2>
           <div className="mt-6 space-y-3">
             {[
               {
@@ -170,11 +175,10 @@ export default function AichiPage() {
             ].map(({ title, desc }) => (
               <div
                 key={title}
-                className="rounded-xl bg-white p-4 shadow-sm"
-                style={{ border: "1px solid #DEDBD4" }}
+                className="rounded-2xl bg-white p-4 shadow-sm"
               >
-                <p className="text-sm font-bold text-brand-dark">{title}</p>
-                <p className="mt-1 text-xs leading-relaxed" style={{ color: "#666666" }}>
+                <p className="text-sm font-bold" style={{ color: "#1D9980" }}>{title}</p>
+                <p className="mt-1 text-xs leading-relaxed" style={{ color: "#4A5C5E" }}>
                   {desc}
                 </p>
               </div>
@@ -186,7 +190,7 @@ export default function AichiPage() {
       {/* FAQ セクション */}
       <section className="px-4 py-12">
         <div className="mx-auto max-w-lg">
-          <h2 className="text-center text-base font-bold">よくある質問</h2>
+          <h2 className="text-center text-base font-bold" style={{ color: "#1A2B2E" }}>よくある質問</h2>
           <div className="mt-6 space-y-3">
             {[
               {
@@ -208,11 +212,10 @@ export default function AichiPage() {
             ].map(({ q, a }) => (
               <div
                 key={q}
-                className="rounded-xl p-4"
-                style={{ border: "1px solid #DEDBD4", background: "#ffffff" }}
+                className="rounded-2xl bg-white p-4 shadow-sm"
               >
-                <p className="text-sm font-bold">Q. {q}</p>
-                <p className="mt-1 text-xs leading-relaxed" style={{ color: "#666666" }}>
+                <p className="text-sm font-bold" style={{ color: "#1A2B2E" }}>Q. {q}</p>
+                <p className="mt-1 text-xs leading-relaxed" style={{ color: "#4A5C5E" }}>
                   A. {a}
                 </p>
               </div>
@@ -222,35 +225,38 @@ export default function AichiPage() {
       </section>
 
       {/* フッターCTA */}
-      <section className="px-4 py-12 text-center" style={{ background: "#EAF0EC" }}>
-        <h2 className="text-lg font-bold">
+      <section
+        className="px-4 py-12 text-center text-white"
+        style={{ background: "linear-gradient(135deg, #2ABFA4 0%, #167A66 100%)" }}
+      >
+        <h2 className="text-lg font-bold" style={{ fontFamily: "'Zen Maru Gothic', sans-serif" }}>
           愛知県であなたにぴったりの住宅会社を見つけよう
         </h2>
-        <p className="mt-2 text-sm" style={{ color: "#666666" }}>
+        <p className="mt-2 text-sm text-white/80">
           19の質問に答えるだけ。約5分で完了します。
         </p>
         <button
           type="button"
           onClick={() => router.push("/diagnosis")}
-          className="mt-5 rounded-full px-8 py-4 text-base font-bold text-white shadow-lg transition-all"
-          style={{ background: "#2E5240" }}
+          className="mt-5 rounded-full px-8 py-4 text-base font-bold text-white shadow-lg transition-all hover:brightness-110"
+          style={{ background: "#FF9F43" }}
         >
-          無料で診断スタート
+          無料で診断スタート →
         </button>
       </section>
 
       <Footer />
 
       {/* スクロール追従CTA（スティッキーフッター） */}
-      <div className="fixed bottom-0 left-0 right-0 z-50 bg-white/95 px-4 py-3 backdrop-blur-sm" style={{ borderTop: "1px solid #DEDBD4" }}>
+      <div className="fixed bottom-0 left-0 right-0 z-50 bg-white/95 px-4 py-3 backdrop-blur-sm" style={{ borderTop: "1px solid #E0E0E0" }}>
         <div className="mx-auto max-w-lg">
           <button
             type="button"
             onClick={() => router.push("/diagnosis")}
-            className="w-full rounded-full py-3 text-sm font-bold text-white shadow-md transition-colors"
-            style={{ background: "#2E5240" }}
+            className="w-full rounded-full py-3 text-sm font-bold text-white shadow-md transition-colors hover:brightness-110"
+            style={{ background: "#FF9F43" }}
           >
-            無料で診断スタート
+            無料で診断スタート →
           </button>
         </div>
       </div>

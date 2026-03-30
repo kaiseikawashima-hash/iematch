@@ -40,9 +40,9 @@ export function InsightCard({
   return (
     <div
       className="mx-auto w-full max-w-lg rounded-2xl p-6"
-      style={{ background: "#EAF0EC" }}
+      style={{ background: "#E8FBF6", border: "1px solid #2ABFA4" }}
     >
-      <p className="mb-4 text-xs font-semibold" style={{ color: "#3A7D44" }}>
+      <p className="mb-4 text-xs font-semibold" style={{ color: "#2ABFA4" }}>
         あなたの回答から見えてきたこと
       </p>
 
@@ -50,31 +50,31 @@ export function InsightCard({
         <div className="flex items-center justify-center py-8">
           <div
             className="h-8 w-8 animate-spin rounded-full border-4 border-gray-300"
-            style={{ borderTopColor: "#3A7D44" }}
+            style={{ borderTopColor: "#2ABFA4" }}
           />
         </div>
       ) : showCorrectionInput ? (
         <>
-          <p className="mb-8 text-sm leading-relaxed text-gray-800">
+          <p className="mb-8 text-sm leading-relaxed" style={{ color: "#1A2B2E" }}>
             {insight}
           </p>
 
           <div className="flex flex-col gap-3">
-            <label className="text-sm font-medium text-gray-700">
+            <label className="text-sm font-medium" style={{ color: "#1A2B2E" }}>
               どんなところが違いましたか？（短くてOKです）
             </label>
             <textarea
               value={correctionText}
               onChange={(e) => setCorrectionText(e.target.value)}
               placeholder="例：コストより、デザインの方が大事かも"
-              className="w-full rounded-xl border border-gray-300 px-4 py-3 text-sm leading-relaxed text-gray-800 placeholder:text-gray-400 focus:border-[#3A7D44] focus:outline-none focus:ring-1 focus:ring-[#3A7D44]"
-              rows={3}
+              className="w-full rounded-xl border px-4 py-3 text-sm leading-relaxed placeholder:text-gray-400 focus:outline-none focus:ring-1"
+              style={{ borderColor: "#2ABFA4", color: "#1A2B2E" }}
             />
             <button
               type="button"
               onClick={handleSubmitCorrection}
               className="h-12 w-full rounded-full text-sm font-medium text-white transition-colors hover:opacity-90"
-              style={{ background: "#3A7D44" }}
+              style={{ background: "#2ABFA4" }}
             >
               送信して次へ
             </button>
@@ -82,7 +82,7 @@ export function InsightCard({
               type="button"
               onClick={handleBackFromCorrection}
               className="h-12 w-full rounded-full border text-sm font-medium transition-colors hover:bg-white/60"
-              style={{ borderColor: "#3A7D44", color: "#3A7D44", background: "white" }}
+              style={{ borderColor: "#2ABFA4", color: "#2ABFA4", background: "white" }}
             >
               戻る
             </button>
@@ -90,7 +90,7 @@ export function InsightCard({
         </>
       ) : (
         <>
-          <p className="mb-8 text-sm leading-relaxed text-gray-800">
+          <p className="mb-8 text-sm leading-relaxed" style={{ color: "#1A2B2E" }}>
             {insight}
           </p>
 
@@ -99,7 +99,7 @@ export function InsightCard({
               type="button"
               onClick={onConfirm}
               className="h-12 w-full rounded-full text-sm font-medium text-white transition-colors hover:opacity-90"
-              style={{ background: "#3A7D44" }}
+              style={{ background: "#2ABFA4" }}
             >
               そうそう、合ってます
             </button>
@@ -107,14 +107,15 @@ export function InsightCard({
               type="button"
               onClick={handleDenyClick}
               className="h-12 w-full rounded-full border text-sm font-medium transition-colors hover:bg-white/60"
-              style={{ borderColor: "#3A7D44", color: "#3A7D44", background: "white" }}
+              style={{ borderColor: "#2ABFA4", color: "#2ABFA4", background: "white" }}
             >
               ちょっと違うかも
             </button>
             <button
               type="button"
               onClick={onSkip}
-              className="mt-1 text-xs text-gray-400 transition-colors hover:text-gray-600"
+              className="mt-1 text-xs transition-colors hover:text-gray-600"
+              style={{ color: "#4A5C5E" }}
             >
               スキップ
             </button>

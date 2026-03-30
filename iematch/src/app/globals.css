@@ -1,25 +1,27 @@
 @import "tailwindcss";
 
 :root {
-  /* ブランドカラー */
-  --brand-primary: #2E5240;
-  --brand-light: #EAF0EC;
-  --brand-dark: #1E3A2C;
+  /* ブランドカラー（ミント系） */
+  --brand-primary: #2ABFA4;
+  --brand-light: #E8FBF6;
+  --brand-dark: #1D9980;
+  --brand-deep: #167A66;
+  --brand-orange: #FF9F43;
 
   /* サブカラー（タグ色分け） */
-  --tag-performance: #EAF0EC;
-  --tag-performance-text: #1E3A2C;
+  --tag-performance: #E8FBF6;
+  --tag-performance-text: #167A66;
   --tag-design: #EEEDFE;
   --tag-design-text: #3C3489;
   --tag-lifestyle: #FAEEDA;
   --tag-lifestyle-text: #633806;
 
   /* 背景・テキスト */
-  --background: #F5F4F0;
-  --foreground: #1A1A1A;
-  --muted: #F5F4F0;
-  --muted-foreground: #666666;
-  --border: #DEDBD4;
+  --background: #FEFCF9;
+  --foreground: #1A2B2E;
+  --muted: #FEFCF9;
+  --muted-foreground: #4A5C5E;
+  --border: #E0E0E0;
 }
 
 @theme inline {
@@ -38,6 +40,11 @@ body {
   font-family: "Noto Sans JP", "Hiragino Sans", sans-serif;
   font-size: 13px;
   line-height: 1.7;
+}
+
+/* 見出し用フォント */
+h1, h2, h3, h4, h5, h6 {
+  font-family: "Zen Maru Gothic", "Noto Sans JP", sans-serif;
 }
 
 /* カルーセル用スクロールバー非表示 */

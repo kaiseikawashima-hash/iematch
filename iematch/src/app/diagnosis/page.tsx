@@ -444,7 +444,7 @@ export default function DiagnosisPage() {
   // インサイト画面表示中
   if (showInsight) {
     return (
-      <div className="flex min-h-screen flex-col" style={{ background: "#F5F4F0" }}>
+      <div className="flex min-h-screen flex-col" style={{ background: "#FEFCF9" }}>
         <Header />
         <main className="mx-auto w-full max-w-lg flex-1 px-4 py-6">
           <InsightCard
@@ -470,24 +470,24 @@ export default function DiagnosisPage() {
     return (
       <div
         className="fixed inset-0 z-50 flex items-center justify-center"
-        style={{ background: "#F5F4F0" }}
+        style={{ background: "#FEFCF9" }}
       >
         <div className="text-center">
-          <p className="text-sm font-medium" style={{ color: "#2E5240" }}>
+          <p className="text-sm font-medium" style={{ color: "#2ABFA4", fontFamily: "'Zen Maru Gothic', sans-serif" }}>
             イエマッチAI
           </p>
           <div
             className="mx-auto mt-6 h-12 w-12 rounded-full border-[3px] border-t-transparent"
             style={{
-              borderColor: "#2E5240",
+              borderColor: "#2ABFA4",
               borderTopColor: "transparent",
               animation: "spin 1s linear infinite",
             }}
           />
-          <p className="mt-6 text-lg font-bold" style={{ color: "#2E5240" }}>
+          <p className="mt-6 text-lg font-bold" style={{ color: "#1A2B2E", fontFamily: "'Zen Maru Gothic', sans-serif" }}>
             あなたに最適な工務店を診断中...
           </p>
-          <p className="mt-2 text-sm text-gray-500">
+          <p className="mt-2 text-sm" style={{ color: "#4A5C5E" }}>
             {loadingMessages[loadingMessageIndex]}
           </p>
         </div>
@@ -497,7 +497,7 @@ export default function DiagnosisPage() {
   }
 
   return (
-    <div className="flex min-h-screen flex-col" style={{ background: "#F5F4F0" }}>
+    <div className="flex min-h-screen flex-col" style={{ background: "#FEFCF9" }}>
       <Header />
 
       <main className="mx-auto w-full max-w-lg flex-1 px-4 py-6">
