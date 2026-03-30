@@ -1,7 +1,9 @@
+import { exteriorImages, interiorImages } from "@/data/styleImages";
+
 /**
  * テイスト画像URL取得（クライアントサイド）
  * /api/admin/images からSupabaseのimagesテーブルを取得
- * 取得できない場合はnullを返す（questions.tsのデフォルトURLをそのまま使う）
+ * 取得できない場合はnullを返す（styleImages.tsのfallback URLをそのまま使う）
  */
 export async function getImages(): Promise<Record<string, string> | null> {
   try {
@@ -25,20 +27,17 @@ export async function getImages(): Promise<Record<string, string> | null> {
 }
 
 /** imagesテーブルのid → questions.tsのoption valueマッピング */
-const ID_TO_VALUE: Record<string, { questionId: string; value: string }> = {
-  ext_simple_modern: { questionId: "Q13", value: "simple_modern" },
-  ext_natural_nordic: { questionId: "Q13", value: "natural_nordic" },
-  ext_japanese_modern: { questionId: "Q13", value: "japanese_modern" },
-  ext_industrial: { questionId: "Q13", value: "industrial" },
-  ext_resort: { questionId: "Q13", value: "resort" },
-  ext_hiraya: { questionId: "Q13", value: "hiraya" },
-  int_white_clean: { questionId: "Q14", value: "white_clean" },
-  int_natural_wood: { questionId: "Q14", value: "natural_wood" },
-  int_monotone: { questionId: "Q14", value: "monotone" },
-  int_cafe_vintage: { questionId: "Q14", value: "cafe_vintage" },
-  int_japanese: { questionId: "Q14", value: "japanese" },
-  int_colorful: { questionId: "Q14", value: "colorful" },
-};
+const ID_TO_VALUE: Record<string, { questionId: string; value: string }> = {};
+
+// 外観画像: Q13
+for (const img of exteriorImages) {
+  ID_TO_VALUE[img.id] = { questionId: "Q13", value: img.id };
+}
+
+// 内装画像: Q14
+for (const img of interiorImages) {
+  ID_TO_VALUE[img.id] = { questionId: "Q14", value: img.id };
+}
 
 /**
  * Supabaseから取得した画像URLマップを使って、

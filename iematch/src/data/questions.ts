@@ -1,4 +1,5 @@
 import { Question } from "@/types";
+import { exteriorImages, interiorImages } from "@/data/styleImages";
 
 export const questions: Question[] = [
   // === カテゴリ1: 現在の状況と検討度合い ===
@@ -185,39 +186,33 @@ export const questions: Question[] = [
     id: "Q13",
     category: 5,
     categoryLabel: "デザインの好み",
-    text: "好みの外観テイストを選んでください",
-    subText: "2〜3つ選択できます",
+    text: "好みの外観の雰囲気を選んでください",
+    subText: "好きな雰囲気を選んでください（最大4枚）",
     type: "image",
-    minSelect: 2,
-    maxSelect: 3,
-    options: [
-      { value: "simple_modern", label: "シンプルモダン", imageUrl: "/images/styles/ext_simple_modern.jpg" },
-      { value: "natural_nordic", label: "ナチュラル・北欧風", imageUrl: "/images/styles/ext_natural_nordic.jpg" },
-      { value: "japanese_modern", label: "和モダン", imageUrl: "/images/styles/ext_japanese_modern.jpg" },
-      { value: "industrial", label: "インダストリアル・ブルックリン", imageUrl: "/images/styles/ext_industrial.jpg" },
-      { value: "resort", label: "リゾート・南欧風", imageUrl: "/images/styles/ext_resort.jpg" },
-      { value: "hiraya", label: "平屋スタイル", imageUrl: "/images/styles/ext_hiraya.webp" },
-      { value: "none", label: "その他・こだわりなし", imageUrl: "" },
-    ],
+    minSelect: 1,
+    maxSelect: 4,
+    options: exteriorImages.map((img) => ({
+      value: img.id,
+      label: img.label,
+      tag: img.tag,
+      imageUrl: img.fallback,
+    })),
   },
   {
     id: "Q14",
     category: 5,
     categoryLabel: "デザインの好み",
     text: "好みの内装の雰囲気を選んでください",
-    subText: "2〜3つ選択できます",
+    subText: "好きな雰囲気を選んでください（最大4枚）",
     type: "image",
-    minSelect: 2,
-    maxSelect: 3,
-    options: [
-      { value: "white_clean", label: "白基調シンプル&クリーン", imageUrl: "/images/styles/int_white_clean.jpg" },
-      { value: "natural_wood", label: "無垢材ナチュラル", imageUrl: "/images/styles/int_natural_wood.jpg" },
-      { value: "monotone", label: "モノトーン・スタイリッシュ", imageUrl: "/images/styles/int_monotone.jpg" },
-      { value: "cafe_vintage", label: "カフェ風・ヴィンテージ", imageUrl: "/images/styles/int_cafe_vintage.jpg" },
-      { value: "japanese", label: "和テイスト", imageUrl: "/images/styles/int_japanese.jpg" },
-      { value: "colorful", label: "カラフル・個性的", imageUrl: "/images/styles/int_colorful.jpg" },
-      { value: "none", label: "その他・こだわりなし", imageUrl: "" },
-    ],
+    minSelect: 1,
+    maxSelect: 4,
+    options: interiorImages.map((img) => ({
+      value: img.id,
+      label: img.label,
+      tag: img.tag,
+      imageUrl: img.fallback,
+    })),
   },
 
   // === カテゴリ6: 住宅性能・こだわりポイント ===

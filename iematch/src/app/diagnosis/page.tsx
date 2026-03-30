@@ -607,6 +607,9 @@ export default function DiagnosisPage() {
             {currentQuestion.type === "multi" && selectedArray.length > 0 && (
               <span className="ml-1">（{selectedArray.length}件選択中）</span>
             )}
+            {currentQuestion.type === "image" && selectedArray.length > 0 && (
+              <span className="ml-1">（{selectedArray.length}枚選択中）</span>
+            )}
             {currentQuestion.type === "ranked" && rankedValues.length > 0 && !rankedValues.includes("none") && (
               <span className="ml-1">（{rankedValues.length}件選択中）</span>
             )}

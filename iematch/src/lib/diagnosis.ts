@@ -1,5 +1,6 @@
 import { Answer, TypeName, RadarValues, DiagnosisResult } from "@/types";
 import { typeDefinitions, subTypeLabels } from "@/data/types";
+import { countTags } from "@/data/styleImages";
 
 type TypeScores = Record<TypeName, number>;
 
@@ -77,26 +78,34 @@ function scoreQ17(scores: TypeScores, answers: Answer[]): TypeScores {
   return s;
 }
 
-// === Q13: 外観テイスト ===
+// === Q13: 外観テイスト（画像タグベース）===
 function scoreQ13(scores: TypeScores, answers: Answer[]): TypeScores {
   const selected = getAnswerArray(answers, "Q13");
+  const tagCounts = countTags(selected);
+  const uniqueTags = Object.keys(tagCounts).length;
   let s = { ...scores };
-  if (selected.length <= 2) {
+
+  // タグが集中（1-2種類）→ デザインこだわり強い
+  if (uniqueTags <= 2 && selected.length > 0) {
     s = addScore(s, "designFirst", 5);
-  } else if (selected.length === 3) {
+  } else if (uniqueTags >= 3) {
     s = addScore(s, "designFirst", 3);
     s = addScore(s, "totalBalance", 2);
   }
   return s;
 }
 
-// === Q14: 内装テイスト ===
+// === Q14: 内装テイスト（画像タグベース）===
 function scoreQ14(scores: TypeScores, answers: Answer[]): TypeScores {
   const selected = getAnswerArray(answers, "Q14");
+  const tagCounts = countTags(selected);
+  const uniqueTags = Object.keys(tagCounts).length;
   let s = { ...scores };
-  if (selected.length <= 2) {
+
+  // タグが集中（1-2種類）→ デザインこだわり強い
+  if (uniqueTags <= 2 && selected.length > 0) {
     s = addScore(s, "designFirst", 4);
-  } else if (selected.length === 3) {
+  } else if (uniqueTags >= 3) {
     s = addScore(s, "designFirst", 2);
     s = addScore(s, "totalBalance", 2);
   }

@@ -21,6 +21,7 @@ export type QuestionOption = {
   value: string;
   label: string;
   imageUrl?: string;
+  tag?: string;
 };
 
 export type Question = {

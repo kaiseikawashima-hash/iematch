@@ -1,5 +1,6 @@
 import { Answer, Builder, Recommendation } from "@/types";
 import { nagoyaWards } from "@/data/areas";
+import { countTags } from "@/data/styleImages";
 
 // === ヘルパー関数 ===
 function getAnswer(answers: Answer[], questionId: string): string | undefined {
@@ -47,28 +48,57 @@ export function filterBuilders(answers: Answer[], builders: Builder[]): Builder[
   });
 }
 
+/**
+ * 新しい画像タグ → 工務店データの旧スタイル値へのマッピング
+ * 1つのタグが複数の旧スタイルに対応する場合がある
+ */
+const TAG_TO_BUILDER_STYLES: Record<string, string[]> = {
+  natural: ["natural_nordic", "natural_wood"],
+  modern: ["simple_modern", "monotone"],
+  simple: ["simple_modern", "white_clean", "hiraya"],
+  japanese: ["japanese_modern", "japanese"],
+  industrial: ["industrial", "cafe_vintage"],
+  luxury: ["resort", "colorful"],
+};
+
+function builderHasTag(builderStyles: string[], tag: string): boolean {
+  const mapped = TAG_TO_BUILDER_STYLES[tag] ?? [];
+  return mapped.some((s) => builderStyles.includes(s));
+}
+
+function builderBestMatchesTag(bestStyle: string, tag: string): boolean {
+  const mapped = TAG_TO_BUILDER_STYLES[tag] ?? [];
+  return mapped.includes(bestStyle);
+}
+
 // === デザイン適合: 外観（18点満点）===
-function calcExteriorScore(userStyles: string[], builder: Builder): number {
+// 画像選択から集計したタグカウントと工務店の得意タグを掛け合わせて加点
+function calcExteriorScore(userImageIds: string[], builder: Builder): number {
+  const tagCounts = countTags(userImageIds);
   let score = 0;
-  if (userStyles.length > 0) {
-    if (userStyles[0] === builder.b3_bestStyle) {
-      score += 10;
-    } else if (builder.b3_exteriorStyles.includes(userStyles[0])) {
-      score += 7;
-    }
-  }
-  for (let i = 1; i < userStyles.length; i++) {
-    if (builder.b3_exteriorStyles.includes(userStyles[i])) {
-      score += 4;
+
+  for (const [tag, count] of Object.entries(tagCounts)) {
+    if (builderBestMatchesTag(builder.b3_bestStyle, tag)) {
+      score += 5 * count;
+    } else if (builderHasTag(builder.b3_exteriorStyles, tag)) {
+      score += 3 * count;
     }
   }
   return Math.min(score, 18);
 }
 
 // === デザイン適合: 内装（12点満点）===
-function calcInteriorScore(userStyles: string[], builder: Builder): number {
-  const matchCount = userStyles.filter((s) => builder.b3_interiorStyles.includes(s)).length;
-  return Math.min(matchCount * 4, 12);
+// 画像選択から集計したタグカウントと工務店の得意タグを掛け合わせて加点
+function calcInteriorScore(userImageIds: string[], builder: Builder): number {
+  const tagCounts = countTags(userImageIds);
+  let score = 0;
+
+  for (const [tag, count] of Object.entries(tagCounts)) {
+    if (builderHasTag(builder.b3_interiorStyles, tag)) {
+      score += 3 * count;
+    }
+  }
+  return Math.min(score, 12);
 }
 
 // === 価値観適合: 会社選びの軸（18点満点）===
@@ -169,8 +199,11 @@ function calcBonusScore(answers: Answer[], builder: Builder): number {
   }
 
   // デザイン一致ボーナス (+3)
+  // 選択画像のタグで最も多いものがbestStyleと一致すれば加点
   const q13 = getAnswerArray(answers, "Q13");
-  if (q13.length > 0 && q13[0] === builder.b3_bestStyle) {
+  const q13Tags = countTags(q13);
+  const topTag = Object.entries(q13Tags).sort((a, b) => b[1] - a[1])[0];
+  if (topTag && builderBestMatchesTag(builder.b3_bestStyle, topTag[0])) {
     score += 3;
   }
 
@@ -233,13 +266,13 @@ function generateReasonText(answers: Answer[], builder: Builder): string {
     custom_design: "自由設計",
   };
 
-  const styleLabels: Record<string, string> = {
-    simple_modern: "シンプルモダン",
-    natural_nordic: "ナチュラル・北欧",
-    japanese_modern: "和モダン",
+  const styleTagLabels: Record<string, string> = {
+    natural: "ナチュラル",
+    modern: "モダン",
+    simple: "シンプル",
+    japanese: "和テイスト",
     industrial: "インダストリアル",
-    resort: "リゾートスタイル",
-    hiraya: "平屋",
+    luxury: "ラグジュアリー",
   };
 
   const parts: string[] = [];
@@ -250,9 +283,11 @@ function generateReasonText(answers: Answer[], builder: Builder): string {
     parts.push(`あなたが重視する「${label}」に強みを持つ会社です。`);
   }
 
-  // デザインの一致
-  if (q13.length > 0 && builder.b3_exteriorStyles.includes(q13[0])) {
-    const label = styleLabels[q13[0]] ?? q13[0];
+  // デザインの一致（画像タグベース）
+  const extTagCounts = countTags(q13);
+  const topExtTag = Object.entries(extTagCounts).sort((a, b) => b[1] - a[1])[0];
+  if (topExtTag && builderHasTag(builder.b3_exteriorStyles, topExtTag[0])) {
+    const label = styleTagLabels[topExtTag[0]] ?? topExtTag[0];
     parts.push(`お好みの「${label}」テイストの施工実績が豊富です。`);
   }
 

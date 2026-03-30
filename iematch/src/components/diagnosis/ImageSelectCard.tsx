@@ -37,50 +37,82 @@ function ThumbnailImage({ src, alt }: { readonly src: string; readonly alt: stri
 
 export function ImageSelectCard({ options, selected, maxSelect, onToggle }: Props) {
   return (
-    <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
-      {options.map((option) => {
-        const isSelected = selected.includes(option.value);
-        const isDisabled =
-          !isSelected && maxSelect !== undefined && selected.length >= maxSelect;
+    <div>
+      {/* 選択カウンター */}
+      <div className="mb-3 text-center">
+        <span className="text-sm font-medium" style={{ color: "#1A2B2E" }}>
+          <span className="font-bold" style={{ color: "#2ABFA4" }}>{selected.length}</span>
+          /{maxSelect ?? 4} 選択中
+        </span>
+      </div>
 
-        return (
-          <button
-            key={option.value}
-            type="button"
-            onClick={() => {
-              if (!isDisabled || isSelected) onToggle(option.value);
-            }}
-            disabled={isDisabled && !isSelected}
-            className={`group relative flex flex-col overflow-hidden rounded-xl border-2 transition-all ${
-              isSelected
-                ? "border-brand shadow-md"
-                : isDisabled
-                  ? "cursor-not-allowed border-transparent opacity-50"
-                  : "border-transparent hover:border-brand/30"
-            }`}
-          >
-            {option.imageUrl ? (
-              <div className="relative h-40 w-full bg-gray-100">
-                <ThumbnailImage src={option.imageUrl} alt={option.label} />
-                {isSelected && (
-                  <div className="absolute right-2 top-2 flex h-6 w-6 items-center justify-center rounded-full bg-brand text-white">
-                    <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
-                      <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
-                    </svg>
-                  </div>
-                )}
-              </div>
-            ) : null}
-            <div
-              className={`px-2 py-2 text-center text-xs font-medium ${
-                isSelected ? "bg-brand-light text-brand-dark" : "bg-white text-gray-700"
+      <div className="grid grid-cols-2 gap-3">
+        {options.map((option) => {
+          const isSelected = selected.includes(option.value);
+          const isDisabled =
+            !isSelected && maxSelect !== undefined && selected.length >= maxSelect;
+
+          return (
+            <button
+              key={option.value}
+              type="button"
+              onClick={() => {
+                if (!isDisabled || isSelected) onToggle(option.value);
+              }}
+              disabled={isDisabled && !isSelected}
+              className={`group relative overflow-hidden rounded-xl transition-all ${
+                isSelected
+                  ? "ring-2 shadow-md"
+                  : isDisabled
+                    ? "cursor-not-allowed opacity-40"
+                    : "ring-1 ring-gray-200 hover:ring-2"
               }`}
+              style={{
+                aspectRatio: "1",
+                ...(isSelected ? { ringColor: "#2ABFA4", borderColor: "#2ABFA4" } : {}),
+              }}
             >
-              {option.label}
-            </div>
-          </button>
-        );
-      })}
+              {/* 画像 */}
+              {option.imageUrl ? (
+                <div className="relative h-full w-full">
+                  <ThumbnailImage src={option.imageUrl} alt={option.label} />
+
+                  {/* ミントオーバーレイ（選択時） */}
+                  {isSelected && (
+                    <div
+                      className="absolute inset-0"
+                      style={{ background: "rgba(42, 191, 164, 0.15)" }}
+                    />
+                  )}
+
+                  {/* チェックバッジ（右上） */}
+                  {isSelected && (
+                    <div
+                      className="absolute right-2 top-2 flex h-6 w-6 items-center justify-center rounded-full text-white shadow-sm"
+                      style={{ background: "#2ABFA4" }}
+                    >
+                      <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                      </svg>
+                    </div>
+                  )}
+
+                  {/* ラベル（下部） */}
+                  <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/50 to-transparent px-2 pb-2 pt-6">
+                    <span className="text-xs font-medium text-white drop-shadow-sm">
+                      {option.label}
+                    </span>
+                  </div>
+                </div>
+              ) : (
+                <div className="flex h-full w-full items-center justify-center bg-gray-50 text-sm text-gray-500">
+                  {option.label}
+                </div>
+              )}
+            </button>
+          );
+        })}
+      </div>
     </div>
   );
 }
