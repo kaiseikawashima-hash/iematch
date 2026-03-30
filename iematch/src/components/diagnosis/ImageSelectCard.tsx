@@ -36,9 +36,16 @@ function ThumbnailImage({ src, alt }: { readonly src: string; readonly alt: stri
 }
 
 export function ImageSelectCard({ options, selected, maxSelect, onToggle }: Props) {
+  // Split normal images from "other" tagged images
+  const normalOptions = options.filter((o) => o.tag !== "other");
+  const otherOption = options.find((o) => o.tag === "other");
+
+  // Use the first "other" image's value for scoring
+  const isOtherSelected = otherOption ? selected.includes(otherOption.value) : false;
+
   return (
     <div>
-      {/* 選択カウンター */}
+      {/* Selection counter */}
       <div className="mb-3 text-center">
         <span className="text-sm font-medium" style={{ color: "#1A2B2E" }}>
           <span className="font-bold" style={{ color: "#2ABFA4" }}>{selected.length}</span>
@@ -47,7 +54,7 @@ export function ImageSelectCard({ options, selected, maxSelect, onToggle }: Prop
       </div>
 
       <div className="grid grid-cols-2 gap-3">
-        {options.map((option) => {
+        {normalOptions.map((option) => {
           const isSelected = selected.includes(option.value);
           const isDisabled =
             !isSelected && maxSelect !== undefined && selected.length >= maxSelect;
@@ -72,12 +79,12 @@ export function ImageSelectCard({ options, selected, maxSelect, onToggle }: Prop
                 ...(isSelected ? { ringColor: "#2ABFA4", borderColor: "#2ABFA4" } : {}),
               }}
             >
-              {/* 画像 */}
+              {/* Image */}
               {option.imageUrl ? (
                 <div className="relative h-full w-full">
                   <ThumbnailImage src={option.imageUrl} alt={option.label} />
 
-                  {/* ミントオーバーレイ（選択時） */}
+                  {/* Mint overlay (selected) */}
                   {isSelected && (
                     <div
                       className="absolute inset-0"
@@ -85,7 +92,7 @@ export function ImageSelectCard({ options, selected, maxSelect, onToggle }: Prop
                     />
                   )}
 
-                  {/* チェックバッジ（右上） */}
+                  {/* Check badge (top-right) */}
                   {isSelected && (
                     <div
                       className="absolute right-2 top-2 flex h-6 w-6 items-center justify-center rounded-full text-white shadow-sm"
@@ -107,6 +114,22 @@ export function ImageSelectCard({ options, selected, maxSelect, onToggle }: Prop
           );
         })}
       </div>
+
+      {/* "Other" option as text link below the grid */}
+      {otherOption && (
+        <div className="text-center mt-4">
+          <button
+            type="button"
+            onClick={() => onToggle(otherOption.value)}
+            className={`text-sm underline transition-colors ${
+              isOtherSelected ? "font-medium" : "text-gray-400"
+            }`}
+            style={isOtherSelected ? { color: "#2ABFA4" } : undefined}
+          >
+            その他・こだわりなし
+          </button>
+        </div>
+      )}
     </div>
   );
 }

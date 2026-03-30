@@ -166,9 +166,8 @@ export const questions: Question[] = [
     category: 3,
     categoryLabel: "暮らし方",
     text: "新しい家でどんな暮らしをしたいですか？",
-    subText: "最大5つまで選択できます",
+    subText: "あてはまるものをすべて選んでください",
     type: "multi",
-    maxSelect: 5,
     options: [
       { value: "family_relax", label: "家族みんなでゆったり過ごす" },
       { value: "kids_play", label: "子どもが伸び伸び遊べる" },
