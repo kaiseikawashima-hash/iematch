@@ -209,12 +209,14 @@ export default function AichiPage() {
             約3分・完全無料・営業電話なし
           </p>
 
-          {/* TODO: イラスト差し替え → public/images/characters/hero_main.png */}
-          <IllustPlaceholder
-            label={"ここにメインイラストを配置\n（背景透過PNG推奨）"}
-            className="mx-auto h-[240px] w-full max-w-[320px] rounded-t-[20px]"
-            style={{ background: "rgba(255,255,255,0.1)" }}
-          />
+          <div className="mx-auto w-full max-w-[320px] pt-4">
+            <img
+              src="/images/top/hero_main.png"
+              alt="イエマッチ メインイラスト"
+              className="mx-auto w-full max-w-[320px]"
+              style={{ display: "block" }}
+            />
+          </div>
         </div>
       </section>
 
@@ -358,24 +360,27 @@ export default function AichiPage() {
                 num: "POINT 01",
                 title: "AIがあなたの回答を分析",
                 desc: "19の質問に答えるだけで、AIがあなたの家づくりタイプを診断。パーソナライズされた工務店を提案します。",
-                file: "data.png",
+                img: "/images/top/solution_ai.png",
+                alt: "AI分析イラスト",
                 reverse: false,
               },
               {
                 num: "POINT 02",
                 title: "愛知県の優良工務店30社から提案",
                 desc: "愛知県に根ざした優良工務店のみを厳選。あなたの希望・予算・こだわりに合った会社を絞り込みます。",
-                file: "design.png",
+                img: "/images/top/solution_matching.png",
+                alt: "工務店マッチングイラスト",
                 reverse: true,
               },
               {
                 num: "POINT 03",
                 title: "資料請求後にカルテをお届け",
                 desc: "診断結果をもとにAIが作成した、あなただけの家づくりカルテをメールでお届けします。",
-                file: "consult.png",
+                img: "/images/top/solution_madori.png",
+                alt: "間取りイラスト",
                 reverse: false,
               },
-            ].map(({ num, title, desc, file, reverse }) => (
+            ].map(({ num, title, desc, img, alt, reverse }) => (
               <div
                 key={num}
                 className={`flex items-center gap-4 rounded-[20px] p-5 ${reverse ? "flex-row-reverse" : ""}`}
@@ -384,15 +389,20 @@ export default function AichiPage() {
                   border: "1px solid rgba(42,191,164,0.12)",
                 }}
               >
-                {/* TODO: イラスト差し替え → public/images/characters/{file} */}
-                <IllustPlaceholder
-                  label={`イラスト\n${file}`}
-                  className="h-[90px] w-[90px] shrink-0 rounded-2xl"
+                <div
+                  className="flex h-[100px] w-[100px] shrink-0 items-center justify-center rounded-2xl"
                   style={{
                     background: "white",
                     boxShadow: "0 2px 8px rgba(42,191,164,0.12)",
                   }}
-                />
+                >
+                  <img
+                    src={img}
+                    alt={alt}
+                    className="h-[100px] w-[100px]"
+                    style={{ objectFit: "contain" }}
+                  />
+                </div>
                 <div>
                   <p
                     className="mb-1 text-[11px] font-bold tracking-[1px]"
