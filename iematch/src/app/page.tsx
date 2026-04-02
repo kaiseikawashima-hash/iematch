@@ -148,16 +148,16 @@ export default function HomePage() {
           </h2>
           <div className="mt-6 grid grid-cols-2 gap-3">
             {[
-              { emoji: "🏠", text: "どの工務店に頼めばいいかわからない" },
-              { emoji: "📞", text: "展示場に行ったら営業がしつこかった" },
-              { emoji: "💰", text: "予算内で建てられるか不安" },
-              { emoji: "🤔", text: "何から始めればいいかわからない" },
-            ].map(({ emoji, text }) => (
+              { src: "/images/characters/problem_company.png", text: "どの工務店に頼めばいいかわからない" },
+              { src: "/images/characters/problem_sales.png", text: "展示場に行ったら営業がしつこかった" },
+              { src: "/images/characters/problem_budget.png", text: "予算内で建てられるか不安" },
+              { src: "/images/characters/problem_planning.png", text: "何から始めればいいかわからない" },
+            ].map(({ src, text }) => (
               <div
                 key={text}
                 className="flex flex-col items-center rounded-2xl bg-white p-4 text-center shadow-md"
               >
-                <span className="text-3xl">{emoji}</span>
+                <CharacterImage src={src} alt={text} width={80} height={80} />
                 <span
                   className="mt-2 text-xs font-medium leading-relaxed"
                   style={{ color: "#1A2B2E" }}
