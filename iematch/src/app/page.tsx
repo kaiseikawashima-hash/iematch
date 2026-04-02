@@ -90,14 +90,6 @@ export default function HomePage() {
           <br />
           完全無料・営業電話なし。
         </p>
-        <div className="mt-6 flex justify-center">
-          <CharacterImage
-            src="/images/characters/hero_man.png"
-            alt="家づくりイメージ"
-            width={280}
-            height={220}
-          />
-        </div>
         <button
           type="button"
           onClick={() => router.push("/diagnosis")}
@@ -109,6 +101,14 @@ export default function HomePage() {
         <p className="mt-2 text-xs text-white/70">
           約3分・完全無料・営業電話なし
         </p>
+        <div className="mt-6 flex justify-center mix-blend-multiply">
+          <CharacterImage
+            src="/images/characters/hero_man.png"
+            alt="家づくりイメージ"
+            width={280}
+            height={220}
+          />
+        </div>
       </section>
       <WaveDivider fillColor="#ffffff" />
 
