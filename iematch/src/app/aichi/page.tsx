@@ -146,7 +146,7 @@ export default function AichiPage() {
           >
             家づくりで、こんなお悩みありませんか？
           </h2>
-          <div className="mt-6 grid grid-cols-2 gap-3">
+          <div className="mt-6 grid grid-cols-2 gap-4">
             {[
               { src: "/images/characters/problem_company.png", text: "どの工務店に頼めばいいかわからない" },
               { src: "/images/characters/problem_sales.png", text: "展示場に行ったら営業がしつこかった" },
@@ -155,11 +155,12 @@ export default function AichiPage() {
             ].map(({ src, text }) => (
               <div
                 key={text}
-                className="flex flex-col items-center rounded-2xl bg-white p-4 text-center shadow-md"
+                className="flex flex-col items-center justify-center rounded-2xl bg-white p-5 text-center shadow-md transition-shadow hover:shadow-lg"
+                style={{ minHeight: "160px" }}
               >
-                <CharacterImage src={src} alt={text} width={80} height={80} />
+                <CharacterImage src={src} alt={text} width={100} height={100} />
                 <span
-                  className="mt-2 text-xs font-medium leading-relaxed"
+                  className="mb-0 mt-3 text-sm font-bold leading-relaxed"
                   style={{ color: "#1A2B2E" }}
                 >
                   {text}
