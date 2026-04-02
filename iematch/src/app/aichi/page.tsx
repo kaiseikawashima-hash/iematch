@@ -103,10 +103,10 @@ export default function AichiPage() {
         </p>
         <div className="mt-6 flex justify-center mix-blend-multiply">
           <CharacterImage
-            src="/images/characters/hero_man.png"
+            src="/images/characters/hero_main.png"
             alt="家づくりイメージ"
-            width={280}
-            height={220}
+            width={320}
+            height={256}
           />
         </div>
       </section>
