@@ -4,15 +4,34 @@ import Link from "next/link";
 
 export function Header() {
   return (
-    <header className="sticky top-0 z-50 backdrop-blur-sm" style={{ background: "rgba(42,191,164,0.95)", borderBottom: "1px solid #1D9980" }}>
-      <div className="mx-auto flex h-14 max-w-3xl items-center justify-between px-4">
+    <header
+      className="fixed left-0 right-0 top-0 z-50 backdrop-blur-[10px]"
+      style={{
+        background: "rgba(255,255,255,0.95)",
+        boxShadow: "0 1px 20px rgba(0,0,0,0.06)",
+      }}
+    >
+      <div className="mx-auto flex h-12 max-w-[430px] items-center justify-between px-5">
         <Link href="/" className="flex items-center gap-1.5">
-          <span className="text-lg font-bold text-white" style={{ fontFamily: "'Zen Maru Gothic', sans-serif" }}>イエマッチ</span>
-          <span className="rounded-full bg-white px-1.5 py-0.5 text-[10px] font-bold" style={{ color: "#2ABFA4" }}>
+          <span
+            className="text-lg font-black"
+            style={{
+              fontFamily: "'Zen Maru Gothic', sans-serif",
+              color: "#2ABFA4",
+            }}
+          >
+            イエマッチ
+          </span>
+          <span
+            className="rounded-[10px] px-1.5 py-0.5 text-[10px] font-bold text-white"
+            style={{ background: "#2ABFA4" }}
+          >
             AI
           </span>
         </Link>
-        <span className="text-xs text-white/80">約5分で完了</span>
+        <span className="text-xs font-medium" style={{ color: "#4A5C5E" }}>
+          約5分で完了
+        </span>
       </div>
     </header>
   );
