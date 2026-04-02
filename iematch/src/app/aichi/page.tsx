@@ -94,8 +94,8 @@ export default function AichiPage() {
           <CharacterImage
             src="/images/characters/hero_man.png"
             alt="家づくりイメージ"
-            width={200}
-            height={200}
+            width={280}
+            height={220}
           />
         </div>
         <button
